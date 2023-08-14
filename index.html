@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Building Generation</title>
+
+  <style>
+    body { margin: 0; }
+    canvas { display: block; }
+    #controls {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      background: #f0f0f0;
+      padding: 10px;
+      display: flex;
+      align-items: center;
+    }
+    #controls label,
+    #controls input {
+      margin-right: 5px;
+    }
+    #controls button {
+      padding: 5px 10px;
+      border: none;
+      cursor: pointer;
+      margin-left: 5px;
+    }
+  </style>
+  
+</head>
+<body>
+  <div id="controls">
+    <label for="rows">Rows:</label>
+    <input type="number" id="rows" name="rows" min="1" value="7">
+    <label for="cols">Columns:</label>
+    <input type="number" id="cols" name="cols" min="1" value="7">
+    <button id="apply">Apply</button>
+    <button id="regenerate">Regenerate</button> <!-- Assuming this is your existing button -->
+    <span id="randomSeedDisplay"></span>
+
+  </div>
+  
+
+  <script type="module" src="/main.js"></script>
+</body>
+</html>

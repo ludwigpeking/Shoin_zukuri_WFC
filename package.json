@@ -1,0 +1,26 @@
+{
+  "name": "shoin_zukuri_wfc",
+  "version": "1.0.0",
+  "description": "",
+  "main": "GLTFLoader.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ludwigpeking/Shoin_zukuri_WFC.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/ludwigpeking/Shoin_zukuri_WFC/issues"
+  },
+  "homepage": "https://github.com/ludwigpeking/Shoin_zukuri_WFC#readme",
+  "dependencies": {
+    "three": "^0.155.0"
+  },
+  "devDependencies": {
+    "vite": "^4.4.9"
+  }
+}
