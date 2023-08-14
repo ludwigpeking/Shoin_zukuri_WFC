@@ -173,7 +173,7 @@ document.body.appendChild(renderer.domElement);
 renderer.shadowMap.enabled = true;
 renderer.shadowMap.needsUpdate = true;
 renderer.toneMappingExposure = 0.5;
-// renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 
 
 
@@ -192,8 +192,8 @@ directionalLight.shadow.camera.left = -80; // Adjust as needed
 directionalLight.shadow.camera.right = 80; // Adjust as needed
 directionalLight.shadow.camera.top = 80; // Adjust as needed
 directionalLight.shadow.camera.bottom = -80; // Adjust as needed
-directionalLight.shadow.mapSize.width = 1024;
-directionalLight.shadow.mapSize.height = 1024;
+directionalLight.shadow.mapSize.width = 2048;
+directionalLight.shadow.mapSize.height = 2024;
 //set the shadow darker
 directionalLight.shadow.darkness = 0.3;
 directionalLight.shadow.bias = 0.001;
