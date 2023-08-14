@@ -225,6 +225,7 @@ const environmentMapTexture = cubeTextureLoader.load([
   './cubeTexture/negz.jpg',
 ]);
 scene.environment = environmentMapTexture;
+scene.background = environmentMapTexture;
 const manager = new THREE.LoadingManager();
 
 manager.onLoad = function() {
@@ -268,7 +269,7 @@ document.getElementById('apply').addEventListener('click', function() {
 document.getElementById('regenerate').addEventListener('click', regenerate);
 
 // //add a large plane down below at y = -10 to catch shadows
-const planeGeometry = new THREE.PlaneGeometry(1000, 1000);
+const planeGeometry = new THREE.PlaneGeometry(10000, 10000);
 const planeMaterial = new THREE.MeshStandardMaterial({
   color: 0xaaaaaa,
   side: THREE.DoubleSide,
@@ -276,7 +277,7 @@ const planeMaterial = new THREE.MeshStandardMaterial({
 const plane = new THREE.Mesh(planeGeometry, planeMaterial);
 plane.receiveShadow = true;
 plane.rotation.x = Math.PI / 2;
-plane.position.y = -10;
+plane.position.y = -0.5;
 scene.add(plane);
 
 
