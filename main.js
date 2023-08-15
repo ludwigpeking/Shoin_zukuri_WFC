@@ -7,11 +7,47 @@ let cols = 7;
 let rows = 7;
 let grid = [];
 let unsolved = [];
+const defaultSeed = 19;
+let openEdge = true;
+
+// Get a reference to the checkbox
+const checkbox = document.getElementById('myCheckbox');
+
+// Add an event listener
+checkbox.addEventListener('change', function() {
+    openEdge = this.checked;  
+    console.log(openEdge);}); 
 
 
+class SeededRandom {
+  constructor(seed = Date.now()) {
+    this.m = 0x80000000; // 2**31;
+    this.a = 1103515245;
+    this.c = 321321;
+    this.initialState = seed % this.m;  // Store the initial state
+    this.state = this.initialState;
+  }
+  
+  // Reset the internal state to its initial value
+  reset() {
+    this.state = this.initialState;
+  }
 
+  // Return a random float in [0, 1)
+  nextFloat() {
+    this.state = (this.a * this.state + this.c) % this.m;
+    return this.state / this.m;
+  }
 
+  // Return a random int in [0, m)
+  nextInt(m) {
+    return Math.floor(this.nextFloat() * m);
+  }
+}
 
+// Usage
+let rng = new SeededRandom(defaultSeed); 
+// console.log(rng)
 
 class Tile {
   constructor(index, num, edges) {
@@ -93,11 +129,8 @@ let tiles = [
   new Tile(30, 0, ["00N", "NBN", "NNN", "N00"]),
   new Tile(31, 0, ["N00", "00N", "NNN", "NBN"])]
 
-
-
 // Add rotate tiles
 tiles.push(tiles[6].rotate(1));
-
 // Rotate tiles, add all 3 other directions
 for (let i = 7; i < 32; i++) {
   for (let j = 1; j < 4; j++) {
@@ -105,7 +138,6 @@ for (let i = 7; i < 32; i++) {
   }
 }
 for (let p = 0; p < tiles.length; p++) {
-
   tiles[p].analyze(tiles);
 }
 
@@ -145,147 +177,6 @@ class Cell {
     }
   }
 }
-// Function to generate a random seed
-function generateRandomSeed() {
-  const seed = Math.random().toString(); // Example seed
-  updateRandomSeedDisplay(seed);
-  return seed;
-}
-
-// Function to update the UI with the random seed
-function updateRandomSeedDisplay(seed) {
-  document.getElementById('randomSeedDisplay').innerText = seed;
-}
-
-// Example usage
-const seed = generateRandomSeed();
-
-
-
-
-// Create scene, camera, and renderer
-const scene = new THREE.Scene();
-const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-camera.position.set(cols * 8 , 15, rows * 8 );
-const renderer = new THREE.WebGLRenderer();
-renderer.setSize(window.innerWidth, window.innerHeight);
-document.body.appendChild(renderer.domElement);
-renderer.shadowMap.enabled = true;
-renderer.shadowMap.needsUpdate = true;
-renderer.toneMappingExposure = 0.5;
-renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-
-
-
-//scene add background color
-scene.background = new THREE.Color(0x0000ff);
-
-
-//add a directional light
-const directionalLight = new THREE.DirectionalLight(0xffffee, 2);
-directionalLight.position.set(-100, 100, 100); // Adjust the position
-directionalLight.target.position.set(0, 0, 0); // Target position (where the light is pointing)
-directionalLight.castShadow = true;
-directionalLight.shadow.camera.near = 0.5;
-directionalLight.shadow.camera.far = 500;
-directionalLight.shadow.camera.left = -80; // Adjust as needed
-directionalLight.shadow.camera.right = 80; // Adjust as needed
-directionalLight.shadow.camera.top = 80; // Adjust as needed
-directionalLight.shadow.camera.bottom = -80; // Adjust as needed
-directionalLight.shadow.mapSize.width = 2048;
-directionalLight.shadow.mapSize.height = 2024;
-//set the shadow darker
-directionalLight.shadow.darkness = 0.3;
-directionalLight.shadow.bias = 0.001;
-scene.add(directionalLight);
-scene.add(directionalLight.target); // Important: add the target to the scene
-// const cameraHelper = new THREE.CameraHelper(directionalLight.shadow.camera);
-// scene.add(cameraHelper);
-
-
-const controls = new OrbitControls(camera, renderer.domElement);
-controls.enableDamping = true;
-
-// Create an AxesHelper with a given size
-const axesHelper = new THREE.AxesHelper(50);
-
-// Add it to the scene
-scene.add(axesHelper);
-
-// Add environmental light
-
-
-const cubeTextureLoader = new THREE.CubeTextureLoader();
-const environmentMapTexture = cubeTextureLoader.load([
-  './cubeTexture/posx.jpg',
-  './cubeTexture/negx.jpg',
-  './cubeTexture/posy.jpg',
-  './cubeTexture/negy.jpg',
-  './cubeTexture/posz.jpg',
-  './cubeTexture/negz.jpg',
-]);
-scene.environment = environmentMapTexture;
-scene.background = environmentMapTexture;
-const manager = new THREE.LoadingManager();
-
-manager.onLoad = function() {
-  // Called when all resources are loaded
-  initializeScene();
-};
-
-function initializeScene() {
-
-  startOver();
-
-}
-
-
-manager.itemStart('buildingBlocks');
-
-// Initial load
-loadBuildingBlocks();
-
-// Add regeneration button
-document.getElementById('apply').addEventListener('click', function() {
-  // Read the values from the input fields
-  let newRows = parseInt(document.getElementById('rows').value);
-  let newCols = parseInt(document.getElementById('cols').value);
-
-  // Check for valid input
-  if (newRows > 0 && newCols > 0) {
-    // Update the rows and cols variables
-    rows = newRows;
-    cols = newCols;
-
-    // Clear the current scene
-    clearScene();
-
-    // Regenerate the grid with new rows and cols
-    startOver();
-  } else {
-    alert('Please enter valid numbers for rows and columns.');
-  }
-});
-document.getElementById('regenerate').addEventListener('click', regenerate);
-
-// //add a large plane down below at y = -10 to catch shadows
-const planeGeometry = new THREE.PlaneGeometry(10000, 10000);
-const planeMaterial = new THREE.MeshStandardMaterial({
-  color: 0xaaaaaa,
-  side: THREE.DoubleSide,
-});
-const plane = new THREE.Mesh(planeGeometry, planeMaterial);
-plane.receiveShadow = true;
-plane.rotation.x = Math.PI / 2;
-plane.position.y = -0.5;
-scene.add(plane);
-
-
-function regenerate() {
-  clearScene();
-  startOver();
-}
-
 function reverseString(s) {
   return s.split('').reverse().join('');
 }
@@ -314,11 +205,113 @@ function compareEdge(a, b) {
   return a === reverseString(b);
 }
 
+// Create scene, camera, and renderer
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0xccddff);
+const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+camera.position.set(cols * 8 , 12, rows * 8 );
+const renderer = new THREE.WebGLRenderer();
+renderer.setSize(window.innerWidth, window.innerHeight);
+document.body.appendChild(renderer.domElement);
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.needsUpdate = true;
+renderer.toneMappingExposure = 0.5;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+
+document.getElementById('setSeed').addEventListener('click', function() {
+  let seedValue = document.getElementById('seedInput').value;
+  if (seedValue === "") {
+    // If the input is empty, generate a random seed
+    seedValue = Date.now();
+  } else {
+    // Convert the seed to a number
+    seedValue = parseInt(seedValue);
+  }
+  // Display the seed (useful for random seeds to reproduce results)
+  document.getElementById('seedInput').value = seedValue;
+  // Update the random number generator with the new seed
+  rng = new SeededRandom(seedValue);
+  clearScene();
+  startOver() ;
+});
+// For example, to initialize with seed :
+document.getElementById('seedInput').value = defaultSeed;
+
+//add a directional light
+const directionalLight = new THREE.DirectionalLight(0xffffee, 2);
+directionalLight.position.set(-100, 100, 100); 
+directionalLight.target.position.set(0, 0, 0); 
+directionalLight.castShadow = true;
+directionalLight.shadow.camera.near = 0.5;
+directionalLight.shadow.camera.far = 500;
+directionalLight.shadow.camera.left = -80; 
+directionalLight.shadow.camera.right = 80; 
+directionalLight.shadow.camera.top = 80; 
+directionalLight.shadow.camera.bottom = -80; 
+directionalLight.shadow.mapSize.width = 512;
+directionalLight.shadow.mapSize.height = 512;
+directionalLight.shadow.darkness = 0.3;//set the shadow darker
+directionalLight.shadow.bias = -0.005;
+scene.add(directionalLight);
+scene.add(directionalLight.target); 
+const cameraHelper = new THREE.CameraHelper(directionalLight.shadow.camera);
+scene.add(cameraHelper);
+
+const controls = new OrbitControls(camera, renderer.domElement);
+controls.enableDamping = true;
+function createOrbitHelper(radius) {
+  // Create a circle with only the outer edge
+  const circleGeometry = new THREE.CircleGeometry(radius, 64);
+  const edgesGeometry = new THREE.EdgesGeometry(circleGeometry); // Get only the outer edge
+  const material = new THREE.LineBasicMaterial({ color: 0x888888 }); // Red color for visibility
+
+  // Create a circle mesh
+  const circle = new THREE.LineSegments(edgesGeometry, material);
+  return circle;
+}
+
+// Create circles for each plane
+const orbitHelperXY = createOrbitHelper(50);
+const orbitHelperYZ = createOrbitHelper(50);
+const orbitHelperXZ = createOrbitHelper(50);
+
+// Rotate them to align with the planes
+orbitHelperYZ.rotation.y = Math.PI / 2;
+orbitHelperXZ.rotation.x = Math.PI / 2;
+
+// Add the orbit helpers to the scene
+scene.add(orbitHelperXY, orbitHelperYZ, orbitHelperXZ);
+
+
+// Create an AxesHelper with a given size
+const axesHelper = new THREE.AxesHelper(50);
+scene.add(axesHelper);
+
+// Add environmental lighting
+const cubeTextureLoader = new THREE.CubeTextureLoader();
+const environmentMapTexture = cubeTextureLoader.load([
+  '/cubeTexture/posx.jpg',
+  '/cubeTexture/negx.jpg',
+  '/cubeTexture/posy.jpg',
+  '/cubeTexture/negy.jpg',
+  '/cubeTexture/posz.jpg',
+  '/cubeTexture/negz.jpg',
+]);
+scene.environment = environmentMapTexture;
+scene.background = environmentMapTexture;
+const manager = new THREE.LoadingManager();
+
+manager.onLoad = function() {
+  // Called when all resources are loaded
+  startOver();
+};
+manager.itemStart('buildingBlocks');
+// // Initial load
+loadBuildingBlocks();
+
 function startOver() {
   unsolved = [];
   grid = [];
-  generateRandomSeed() ;
-
   // Create cell for each spot on the grid
   for (let i = 0; i < cols; i++) {
     grid.push([]);
@@ -327,9 +320,8 @@ function startOver() {
       unsolved.push(grid[i][j]);
     }
   }
-
-  if(Math.random() < 0.4){
-  let randomCell = grid[Math.floor(cols / 3)][Math.floor(rows / 3)]
+  if(rng.nextFloat() < 0.5){
+  let randomCell = grid[Math.floor(rng.nextFloat(cols / 3)+ cols / 3 )][Math.floor(rng.nextFloat(rows / 3)+rows / 3)]
   console.log('tower',randomCell.i, randomCell.j)
   randomCell.chosen = tiles[23];
   randomCell.collapsed = true;
@@ -339,7 +331,7 @@ if (index > -1) {
   unsolved.splice(index, 1);
 }}
  
-  if(Math.random() < 0.4){
+  if(rng.nextFloat() < 0.5){
     let randomCell = grid[cols-1][rows-1];
     console.log('pond',randomCell.i, randomCell.j)
     randomCell.chosen = tiles[3];
@@ -349,13 +341,22 @@ if (index > -1) {
   if (index > -1) {
     unsolved.splice(index, 1);
   }}
-        
-    
-      //else if (i === 0 || i === cols - 1 || j === 0 || j === rows - 1) {
-      //   grid[i].push(new Cell(i, j, tiles));
-      //   grid[i][j].chosen = tiles[0];
-      //   grid[i][j].collapsed = true;}
-      
+
+  if (openEdge === true){
+        for (let i = 0; i < cols; i++) {
+          for (let j = 0; j < rows; j++) {
+            if (i === 0 || i === cols - 1 || j === 0 || j === rows - 1) {
+              grid[i][j].chosen = tiles[0];
+              grid[i][j].collapsed = true;
+              grid[i][j].checkNeighbors(grid);
+              let index = unsolved.indexOf(grid[i][j]);
+              if (index > -1) {
+                unsolved.splice(index, 1);
+              }
+            }
+          }
+        }
+      }
 
   collapse(unsolved, grid);
 }
@@ -364,10 +365,10 @@ function collapse(unsolved, grid) {
   while (unsolved.length > 0) {
     unsolved.sort((a, b) => a.options.length - b.options.length);
     if (unsolved[0].options.length === 0) {
-      startOver();
+      startOver(); 
       break;
     } else {
-      let chosen = unsolved[0].options[Math.floor(Math.random() * unsolved[0].options.length)];
+      let chosen = unsolved[0].options[Math.floor(rng.nextFloat() * unsolved[0].options.length)];
       unsolved[0].chosen = chosen;
       unsolved[0].collapsed = true;
       unsolved[0].checkNeighbors(grid);
@@ -380,36 +381,23 @@ function collapse(unsolved, grid) {
       for (let j = 0; j < rows; j++) {
         // Get the chosen building block
         let chosenBlock = buildingBlocks[grid[i][j].chosen.index];
-        chosenBlock.receiveShadow = true;
         // Clone the building block
+        // console.log('chosenBlock',chosenBlock)
         let house = chosenBlock.clone();
          // Make the object visible
         house.visible = true;
         house.castShadow = true; // this building will cast shadows
         house.receiveShadow = true; // this building will receive shadows
-        // other code to position and add the building to the scene
-
-
-
-        // Set position (adjusted for coordinate system difference)
         house.position.set(i*6 , 0, j * 6);
-
-        // Set scale
-        house.scale.set(1, 1, -1);
-
-        // Set rotation (adjusted for coordinate system difference)
+        house.scale.set(1, 1, -1); //to adapt from blender
         house.rotation.set(0, grid[i][j].chosen.ro * Math.PI / 2 , 0);
-
-       
         // Add the house to the scene
         house.generatedBlock = true;
         scene.add(house);
       }
     }
   }
-  
 }
-
 
 function checkValid(arr, valid) {
   for (let i = arr.length - 1; i >= 0; i--) {
@@ -421,56 +409,99 @@ function checkValid(arr, valid) {
   return arr;
 }
 
-
 function clearScene() {
   // Get a list of objects to remove
   const objectsToRemove = scene.children.filter((object) => object.generatedBlock === true);
-
   // Remove each object from the scene
   objectsToRemove.forEach((object) => {
     scene.remove(object);
   });
 }
 
-
-
-
 function loadBuildingBlocks() {
   // Clear existing mesh if any
+
   scene.children.forEach((object) => {
     if (object.isMesh) {
       scene.remove(object);
     }
   });
+  
   // Load GLB file
-  let loader = new GLTFLoader();
-  loader.load('./20230812_refactor.glb', function (gltf){
+  let loader = new GLTFLoader(manager);
+  loader.load('/20230812_refactor.glb', function (gltf){
     gltf.scene.children.forEach((child) => {
         child.visible = false;
         // Store building blocks for future reference
         buildingBlocks[parseInt(child.name)] = child;
-      });
-    console.log('buildingBlocks: ', buildingBlocks)
+    });
+    
     scene.add(gltf.scene);
-    console.log(gltf.scene);
-    manager.itemEnd('buildingBlocks');
+
     gltf.scene.traverse((child) => {
       if (child.isMesh) {
         // Enable casting and receiving shadows for the mesh
         child.castShadow = true;
         child.receiveShadow = true;
     
-        // If you want to modify material properties, you can do so here
-        // For example, if the material should be transparent
+        // Modify material properties if needed
         if (child.material.transparent) {
           child.material.transparent = true;
-          // Other material properties can be set here if needed
         }
       }
     });
-    
-  ;
+    manager.itemEnd('buildingBlocks');
+  });
+}
+// Add regeneration button
+
+document.getElementById('apply').addEventListener('click', function() {
+  // Read the values from the input fields
+  let newRows = parseInt(document.getElementById('rows').value);
+  let newCols = parseInt(document.getElementById('cols').value);
+
+  // Check for valid input
+  if (newRows > 1 && newCols > 1 && newRows <= 9 && newCols <= 9) {
+    // Update the rows and cols variables
+    rows = Math.round(newRows);
+    cols = Math.round(newCols);
+
+    // Clear the current scene
+    rng.reset();
+    clearScene();
+    startOver() ;
+  } else {
+    alert('Please enter valid numbers for rows and columns: 2 - 9');
+  }
 });
+
+document.getElementById('regenerate').addEventListener('click', regenerate);
+
+// //add a large plane down below at y = -10 to catch shadows
+const planeGeometry = new THREE.PlaneGeometry(10000, 10000);
+const planeMaterial = new THREE.MeshStandardMaterial({
+  color: 0xaaccaa,
+  side: THREE.DoubleSide,
+});
+const plane = new THREE.Mesh(planeGeometry, planeMaterial);
+plane.receiveShadow = true;
+plane.rotation.x = Math.PI / 2;
+plane.position.y = -1;
+scene.add(plane);
+
+function regenerate() {
+  // Generate a new seed based on the current time
+  const newSeed = Date.now();
+  // Update the random number generator with the new seed
+  rng = new SeededRandom(newSeed);
+  //update rows and cols from dom input value
+  rows = Math.round(document.getElementById('rows').value);
+  cols = Math.round(document.getElementById('cols').value);
+  // Display the new seed in the input box
+  document.getElementById('seedInput').value = newSeed;
+  // Clear the current scene and start over with the new seed
+  clearScene();
+  startOver() ;
 }
 
 // Animation loop
@@ -479,6 +510,6 @@ function animate() {
   controls.update();
   renderer.render(scene, camera);
 }
-animate();
+animate(); //call the loop
 
 

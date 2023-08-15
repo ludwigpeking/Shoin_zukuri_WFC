@@ -8,38 +8,63 @@
   <style>
     body { margin: 0; }
     canvas { display: block; }
+    .checkbox-section {
+      align-items: left;
+      gap: 1px;
+    }
+
     #controls {
       position: absolute;
       top: 10px;
       left: 10px;
       background: #f0f0f0;
-      padding: 10px;
-      display: flex;
+      padding: 5px;
+      width: 150px;
       align-items: center;
     }
-    #controls label,
-    #controls input {
-      margin-right: 5px;
+
+    #myCheckbox {
+      position: relative;
+      
     }
-    #controls button {
+    
+    .number-limit input {
+      left: 70px;
+      width: 30px;
+    }
+    button {
       padding: 5px 10px;
-      border: none;
+      border-width: 1px;
+      width: 100%;
+      background-color: azure;
       cursor: pointer;
-      margin-left: 5px;
+      margin: 10px 10px 10px 0;
+    }
+    label, a{
+      padding: 5px 5px;
     }
   </style>
   
 </head>
 <body>
   <div id="controls">
-    <label for="rows">Rows:</label>
-    <input type="number" id="rows" name="rows" min="1" value="7">
-    <label for="cols">Columns:</label>
-    <input type="number" id="cols" name="cols" min="1" value="7">
-    <button id="apply">Apply</button>
-    <button id="regenerate">Regenerate</button> <!-- Assuming this is your existing button -->
-    <span id="randomSeedDisplay"></span>
+    
+    <button id="regenerate">Regenerate Random Scheme</button> <!-- Assuming this is your existing button -->
+    <input type="checkbox" id="myCheckbox" checked>
+    <label for="myCheckbox">open edge</label><br>
+  
+    <a>Seed: </a><input style="width:90px" type="text" id="seedInput" placeholder="Enter seed (leave blank for random)">
+    <button id="setSeed">Set Seed</button>
 
+    <div class="number-limit">
+      <label for="rows">Rows:</label>
+      <input type="number" style="position: absolute;  width: 30px;" id="rows" name="rows" min="1" max="9" value="7"> 
+    </div>
+    <div class="number-limit">
+      <label for="cols">Columns:</label>
+      <input type="number" style="position: absolute;  width: 30px;" id="cols" name="cols" min="1" max="9" value="7"> 
+    </div>
+    <button id="apply">Apply Size</button>
   </div>
   
 
