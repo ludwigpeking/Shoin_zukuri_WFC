@@ -9,6 +9,7 @@ let grid = [];
 let unsolved = [];
 const defaultSeed = 19;
 let openEdge = true;
+let captureImage = false;
 
 // Get a reference to the checkbox
 const checkbox = document.getElementById('myCheckbox');
@@ -504,12 +505,39 @@ function regenerate() {
   startOver() ;
 }
 
+document.getElementById('saveImage').addEventListener('click', function() {
+  captureImage = true;
+});
+
 // Animation loop
 function animate() {
   requestAnimationFrame(animate);
   controls.update();
   renderer.render(scene, camera);
+  if (captureImage) {
+    const dataURL = renderer.domElement.toDataURL('image/png');
+
+    // Create a link element
+    const link = document.createElement('a');
+    link.href = dataURL;
+    link.download = 'screenshot.png';
+    link.click();
+
+    // Reset the captureImage flag
+    captureImage = false;
+  }
+
 }
 animate(); //call the loop
+
+window.addEventListener('resize', onWindowResize, false);
+function onWindowResize() {
+  // Update camera's aspect ratio and projection matrix
+  camera.aspect = window.innerWidth / window.innerHeight;
+  camera.updateProjectionMatrix();
+
+  // Update renderer's size
+  renderer.setSize(window.innerWidth, window.innerHeight);
+}
 
 
