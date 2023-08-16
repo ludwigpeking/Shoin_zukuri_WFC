@@ -54,32 +54,41 @@ class PineTree {
 
         // Create branches and position them
         // (For simplicity, just creating straight branches here. Curve logic can be added using Three.js curve or spline functionalities.)
-        const length1 = branch1Diameter * this.slenderness * 0.5 * normalRandom(0.5);
-        const shift1 = length1 * this.expansion * normalRandom(0.5);
+        const length1 = branch1Diameter * this.slenderness * 0.3 * normalRandom(0.3);
+        const shift1 = length1 * this.expansion * normalRandom(0.3);
 
         const prod = length1 * shift1 * branch1Diameter * branch1Diameter;
         // prod = length2 * shift2 * brach2Diameter * branch2Diameter;
-        const length2 = prod / (shift1 * branch2Diameter * branch2Diameter);
-        const shift2 = prod / (length1 * branch2Diameter * branch2Diameter);
 
-        const angle1 = Math.atan(shift1 / length1);
+        const length2 = Math.sqrt(prod/(branch2Diameter * this.expansion));
+        const shift2 = - length2 * this.expansion; // Opposite direction
+
+        const angle1 = Math.atan(shift1 / length1); 
         const angle2 = Math.atan(shift2 / length2);
         
         const branch1Geometry = new THREE.CylinderGeometry(branch1Diameter/2, branch1Diameter/2, length1);
         const branch1Mesh = new THREE.Mesh(branch1Geometry, this.woodMaterial);
-  
-
         const branch2Geometry = new THREE.CylinderGeometry(branch2Diameter/2, branch2Diameter/2, length2);
         const branch2Mesh = new THREE.Mesh(branch2Geometry, this.woodMaterial);
         
         // Adjust position based on angle and length
-branch1Mesh.position.y = y + parentLength + (length1 / 2) * Math.cos(angle1);
-branch1Mesh.position.x = x + (length1 / 2) * Math.sin(angle1) * Math.sin(rotation1);
-branch1Mesh.position.z = z + (length1 / 2) * Math.sin(angle1) * Math.cos(rotation1);
+        branch1Mesh.position.y = y  + (length1 / 2) * Math.cos(angle1);
+        branch1Mesh.position.x = x + (length1 / 2) * Math.sin(angle1) ;
+        branch1Mesh.rotation.z = rotation1;
 
-branch2Mesh.position.y = y + parentLength + (length2 / 2) * Math.cos(angle2);
-branch2Mesh.position.x = x + (length2 / 2) * Math.sin(angle2) * Math.sin(rotation2);
-branch2Mesh.position.z = z + (length2 / 2) * Math.sin(angle2) * Math.cos(rotation2);
+        branch2Mesh.position.y = y + (length2 / 2) * Math.cos(angle2);
+        branch2Mesh.position.x = x + (length2 / 2) * Math.sin(angle2) ;
+        branch2Mesh.rotation.z = rotation2;
+
+        // Adjust position based on angle and length
+        branch1Mesh.position.y = y + (length1 / 2) * Math.cos(angle1);
+        branch1Mesh.position.x = x + (length1 / 2) * Math.sin(angle1) * Math.sin(rotation1);
+        branch1Mesh.position.z = z + (length1 / 2) * Math.sin(angle1) * Math.cos(rotation1);
+
+        branch2Mesh.position.y = y  + (length2 / 2) * Math.cos(angle2);
+        branch2Mesh.position.x = x + (length2 / 2) * Math.sin(angle2) * Math.sin(rotation2);
+        branch2Mesh.position.z = z + (length2 / 2) * Math.sin(angle2) * Math.cos(rotation2);
+
 
 
         this.treeGroup.add(branch1Mesh);
