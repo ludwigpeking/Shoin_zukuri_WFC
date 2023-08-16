@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
+import PineTree from './Pine';
 
 let buildingBlocks = [];
 let cols = 7;
@@ -10,6 +11,7 @@ let unsolved = [];
 const defaultSeed = 19;
 let openEdge = true;
 let captureImage = false;
+
 
 // Get a reference to the checkbox
 const checkbox = document.getElementById('myCheckbox');
@@ -539,5 +541,20 @@ function onWindowResize() {
   // Update renderer's size
   renderer.setSize(window.innerWidth, window.innerHeight);
 }
+
+
+const pine = new PineTree(15, 40, 40, 0.5, 30, 0.3);
+pine.addToScene(scene);
+//add a cylinder at the pine tree's position
+const cylinderGeometry = new THREE.CylinderGeometry(0.5, 0.5, 5, 32);
+const cylinderMaterial = new THREE.MeshStandardMaterial({
+  color: 0x00ff00,
+  side: THREE.DoubleSide,
+});
+const cylinder = new THREE.Mesh(cylinderGeometry, cylinderMaterial);
+cylinder.position.set(40, 0, 40);
+scene.add(cylinder);
+
+
 
 
