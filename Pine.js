@@ -52,6 +52,8 @@ class PineTree {
             const leafMesh = new THREE.Mesh(leafGeometry, this.leafMaterial);
             leafMesh.position.set(startX, startY, startZ);
             leafMesh.scale.set(1, 0.3, 1);
+            leafMesh.castShadow = true;
+            leafMesh.receiveShadow = true;
             this.treeGroup.add(leafMesh);
             return;
         } else {
@@ -67,9 +69,15 @@ class PineTree {
             pivot2.position.set(startX, startY, startZ);
         
             // Calculate diameters based on parent's diameter
-            const d1 = Math.sqrt(0.9 * parentDiameter * parentDiameter * (Math.random()));
-            // const d1 = Math.sqrt(0.9 * parentDiameter * parentDiameter /2);
-            const d2 = Math.sqrt(0.9 * parentDiameter * parentDiameter - d1 * d1);
+            // let d1 = Math.sqrt(0.9 * parentDiameter * parentDiameter * (Math.random()));
+            let d1 = Math.sqrt(0.9 * parentDiameter * parentDiameter /2);
+            let d2 = Math.sqrt(0.9 * parentDiameter * parentDiameter - d1 * d1);
+            //give a 50% chance for d1 and d2 to switch value
+            if (Math.random() > 0.5) {
+                let temp = d1;
+                d1 = d2;
+                d2 = temp;
+            }
         
             // Random y-axis rotation
             const rotationY1 = Math.random() * Math.PI;
@@ -85,7 +93,7 @@ class PineTree {
             const s2 = d1 *d1 * l1 * s1 / (d2 * d2 * l2);
             // console.log(" d1 ", d1, " d2 ", d2, " l1 ", l1, " l2 ", l2, " s1 ", s1, " s2 ", prod)
             const rotationZ1 = Math.atan(s1 / l1); 
-            const rotationZ2 = -Math.atan (s2 / l2);
+            const rotationZ2 = -Math.atan(s2 / l2);
             
             let changingWoodMaterial = new THREE.MeshBasicMaterial({color: 0x654321}); // dark brown
             let hsl = new THREE.Color(this.woodMaterial.color.getHex()).getHSL({});
@@ -95,8 +103,10 @@ class PineTree {
             changingWoodMaterial.color = newColor;    
             const branch1Geometry = new THREE.CylinderGeometry(d1/2, d1/2, l1);
             const branch1Mesh = new THREE.Mesh(branch1Geometry, changingWoodMaterial);
+            branch1Mesh.castShadow = true;
             const branch2Geometry = new THREE.CylinderGeometry(d2/2, d2/2, l2);
             const branch2Mesh = new THREE.Mesh(branch2Geometry, changingWoodMaterial);
+            branch2Mesh.castShadow = true;
             
             // Adjust the position of the branches within their respective pivots
             branch1Mesh.position.y = l1 / 2;
@@ -134,8 +144,8 @@ class PineTree {
             // console.log("branch 2 start point:" + startX.toFixed(2) +", "+ startY.toFixed(2) +", "+ startZ.toFixed(2) +", "+ " branch2 length: " + l2.toFixed(2) + " branch2 diameter: " + d2.toFixed(2)  + " branch2 tip position: " + tipWorldPosition2.x.toFixed(2) +", " + tipWorldPosition2.y.toFixed(2) +", " + tipWorldPosition2.z.toFixed(2));
             
             // Recursively generate branches
-            this.generateBranches(tipWorldPosition1.x, tipWorldPosition1.y, tipWorldPosition1.z, d1, l1);
-            this.generateBranches(tipWorldPosition2.x, tipWorldPosition2.y, tipWorldPosition2.z, d2, l2);
+            this.generateBranches(tipWorldPosition1.x, tipWorldPosition1.y, tipWorldPosition1.z, d1);
+            this.generateBranches(tipWorldPosition2.x, tipWorldPosition2.y, tipWorldPosition2.z, d2);
         
         }
     }
@@ -143,6 +153,7 @@ class PineTree {
     addToScene(scene) {
         scene.add(this.treeGroup);
         this.treeGroup.generated = true;
+        this.treeGroup.castShadow = true;
     }
 }
 
