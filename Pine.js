@@ -5,7 +5,8 @@
 import * as THREE from 'three';
 
 class PineTree {
-    constructor(height, x, z, expansion = 0.5, slenderness = 50 , trunkRatio = 0.3) {
+    constructor(height, x, z, expansion = 1, slenderness = 30 , trunkRatio = 0.2) {
+        // console.log("tree total height", height, "tree x", x, "tree z", z, "expansion", expansion, "slenderness", slenderness, "trunkRatio", trunkRatio)
         this.height = height; //assumed total height of the tree, mostly 1.5m to 20m
         this.x = x;
         this.z = z;
@@ -13,13 +14,19 @@ class PineTree {
         this.slenderness = slenderness; //height thickness ratio, 50-80 is normal
         this.trunkRatio = trunkRatio; //trunk height ratio, 0.2-0.4 is normal
 
-        this.woodMaterial = new THREE.MeshBasicMaterial({color: 0x654321}); // dark brown
-        this.leafMaterial = new THREE.MeshBasicMaterial({color: 0x00FF00, transparent: true, opacity: 0.7}); // translucent green
-
+        this.woodMaterial = new THREE.MeshBasicMaterial({color: 0x332211}); // dark brown
+        this.leafMaterial = new THREE.MeshPhongMaterial({
+            color: 0x337711,
+            // shininess: 10,
+            // specular: 0x447722,
+            // emissive: 0x112200
+        });
+        
         this.treeGroup = new THREE.Group();
         this.treeGroup.position.set(this.x, 0, this.z);
-
+        this.level = 0;
         this.generateTrunk();
+        
     }
 
     generateTrunk() {
@@ -31,85 +38,111 @@ class PineTree {
         const trunkMesh = new THREE.Mesh(trunkGeometry, this.woodMaterial);
         trunkMesh.position.y = trunkHeight/2;  // Adjust so trunk begins at y=0
         this.treeGroup.add(trunkMesh);
+        // console.log("trunk height: " + trunkHeight.toFixed(2) + " trunk diameter: " + trunkDiameter.toFixed(2))
+        this.level += 1;
         // Generate branches at the top of the trunk
-        this.generateBranches(this.x, trunkHeight, this.z, trunkDiameter, trunkHeight);
+        this.generateBranches(0, trunkHeight, 0, trunkDiameter, trunkHeight);
+
+       
     }
 
-    generateBranches(x, y, z, parentDiameter, parentLength) {
-        if (parentDiameter < 0.05) {
-            const leafGeometry = new THREE.SphereGeometry(parentDiameter*10, 4, 4);
+    generateBranches(startX, startY, startZ, parentDiameter, parentLength) {
+        if (parentDiameter < 0.1) {
+            const leafGeometry = new THREE.SphereGeometry(parentDiameter*30, 6, 6);
             const leafMesh = new THREE.Mesh(leafGeometry, this.leafMaterial);
-            leafMesh.position.set(x, y, z);
+            leafMesh.position.set(startX, startY, startZ);
+            leafMesh.scale.set(1, 0.3, 1);
             this.treeGroup.add(leafMesh);
             return;
+        } else {
+
+            let pivot1 = new THREE.Object3D();
+            let pivot2 = new THREE.Object3D();
+            
+            // Add the pivots to the tree group
+            this.treeGroup.add(pivot1);
+            this.treeGroup.add(pivot2);
+            // Set the position of the pivots
+            pivot1.position.set(startX, startY, startZ);
+            pivot2.position.set(startX, startY, startZ);
+        
+            // Calculate diameters based on parent's diameter
+            const d1 = Math.sqrt(0.9 * parentDiameter * parentDiameter * (Math.random()));
+            // const d1 = Math.sqrt(0.9 * parentDiameter * parentDiameter /2);
+            const d2 = Math.sqrt(0.9 * parentDiameter * parentDiameter - d1 * d1);
+        
+            // Random y-axis rotation
+            const rotationY1 = Math.random() * Math.PI;
+            const rotationY2 = rotationY1;  // Opposite direction
+            const l1 = d1 * this.slenderness * 0.5 ;
+            const s1 = l1 * this.expansion ;
+            // const l1 = d1 * this.slenderness * 0.5 * normalRandom(0.1);
+            // const s1 = l1 * this.expansion * normalRandom(0.1);
+        
+            const prod = l1 * s1 * d1 * d1;
+            const l2 = Math.sqrt(prod/(d2 * this.expansion));
+            
+            const s2 = d1 *d1 * l1 * s1 / (d2 * d2 * l2);
+            // console.log(" d1 ", d1, " d2 ", d2, " l1 ", l1, " l2 ", l2, " s1 ", s1, " s2 ", prod)
+            const rotationZ1 = Math.atan(s1 / l1); 
+            const rotationZ2 = -Math.atan (s2 / l2);
+            
+            let changingWoodMaterial = new THREE.MeshBasicMaterial({color: 0x654321}); // dark brown
+            let hsl = new THREE.Color(this.woodMaterial.color.getHex()).getHSL({});
+            hsl.h = hsl.h+  this.level * 0.02;
+            // console.log(hsl);
+            let newColor = new THREE.Color().setHSL(hsl.h, 100, hsl.l);
+            changingWoodMaterial.color = newColor;    
+            const branch1Geometry = new THREE.CylinderGeometry(d1/2, d1/2, l1);
+            const branch1Mesh = new THREE.Mesh(branch1Geometry, changingWoodMaterial);
+            const branch2Geometry = new THREE.CylinderGeometry(d2/2, d2/2, l2);
+            const branch2Mesh = new THREE.Mesh(branch2Geometry, changingWoodMaterial);
+            
+            // Adjust the position of the branches within their respective pivots
+            branch1Mesh.position.y = l1 / 2;
+            // console.log("branch1Mesh original position", branch1Mesh.position )
+            branch2Mesh.position.y = l2 / 2;
+            
+            // Add the branches to their respective pivots
+            pivot1.add(branch1Mesh);
+            // console.log("branch1Mesh relative position in pivot", branch1Mesh.position )
+            // console.log("pivot position", pivot1.position);
+            pivot2.add(branch2Mesh);
+            
+            // Apply rotations to the pivots
+            pivot1.rotation.z = rotationZ1;
+            pivot1.rotation.y = rotationY1;
+            
+            pivot2.rotation.z = rotationZ2;
+            pivot2.rotation.y = rotationY2;
+            
+            // Calculate the world coordinates for the tips of the branches
+            let tipLocalPosition1 = new THREE.Vector3(0, l1, 0);
+            
+            let tipLocalPosition2 = new THREE.Vector3(0, l2, 0);
+
+            pivot1.updateMatrixWorld();
+            let tipWorldPosition1 = tipLocalPosition1.applyMatrix4(pivot1.matrixWorld);
+
+            pivot2.updateMatrixWorld();
+            let tipWorldPosition2 = tipLocalPosition2.applyMatrix4(pivot2.matrixWorld);
+
+            this.level += 1;
+
+            // console.log(" level: " + this.level)
+            // console.log(" branch 1 start point:" + startX.toFixed(2) +", "+ startY.toFixed(2) +", "+ startZ.toFixed(2)+", " + " branch1 length: " + l1.toFixed(2) + " branch1 diameter: " + d1.toFixed(2)  + " branch1 tip position: " + tipWorldPosition1.x.toFixed(2) +", " + tipWorldPosition1.y.toFixed(2) +", " + tipWorldPosition1.z.toFixed(2));
+            // console.log("branch 2 start point:" + startX.toFixed(2) +", "+ startY.toFixed(2) +", "+ startZ.toFixed(2) +", "+ " branch2 length: " + l2.toFixed(2) + " branch2 diameter: " + d2.toFixed(2)  + " branch2 tip position: " + tipWorldPosition2.x.toFixed(2) +", " + tipWorldPosition2.y.toFixed(2) +", " + tipWorldPosition2.z.toFixed(2));
+            
+            // Recursively generate branches
+            this.generateBranches(tipWorldPosition1.x, tipWorldPosition1.y, tipWorldPosition1.z, d1, l1);
+            this.generateBranches(tipWorldPosition2.x, tipWorldPosition2.y, tipWorldPosition2.z, d2, l2);
+        
         }
-
-        // Calculate diameters based on parent's diameter
-        const branch1Diameter = Math.sqrt(0.8 * parentDiameter * parentDiameter * Math.random());
-        const branch2Diameter = Math.sqrt(0.8 * parentDiameter * parentDiameter - branch1Diameter * branch1Diameter);
-
-        // Random y-axis rotation
-        const rotation1 = Math.random() * Math.PI;
-        const rotation2 = -rotation1;  // Opposite direction
-
-        // Create branches and position them
-        // (For simplicity, just creating straight branches here. Curve logic can be added using Three.js curve or spline functionalities.)
-        const length1 = branch1Diameter * this.slenderness * 0.3 * normalRandom(0.3);
-        const shift1 = length1 * this.expansion * normalRandom(0.3);
-
-        const prod = length1 * shift1 * branch1Diameter * branch1Diameter;
-        // prod = length2 * shift2 * brach2Diameter * branch2Diameter;
-
-        const length2 = Math.sqrt(prod/(branch2Diameter * this.expansion));
-        const shift2 = - length2 * this.expansion; // Opposite direction
-
-        const angle1 = Math.atan(shift1 / length1); 
-        const angle2 = Math.atan(shift2 / length2);
-        
-        const branch1Geometry = new THREE.CylinderGeometry(branch1Diameter/2, branch1Diameter/2, length1);
-        const branch1Mesh = new THREE.Mesh(branch1Geometry, this.woodMaterial);
-        const branch2Geometry = new THREE.CylinderGeometry(branch2Diameter/2, branch2Diameter/2, length2);
-        const branch2Mesh = new THREE.Mesh(branch2Geometry, this.woodMaterial);
-        
-        // Adjust position based on angle and length
-        branch1Mesh.position.y = y  + (length1 / 2) * Math.cos(angle1);
-        branch1Mesh.position.x = x + (length1 / 2) * Math.sin(angle1) ;
-        branch1Mesh.rotation.z = rotation1;
-
-        branch2Mesh.position.y = y + (length2 / 2) * Math.cos(angle2);
-        branch2Mesh.position.x = x + (length2 / 2) * Math.sin(angle2) ;
-        branch2Mesh.rotation.z = rotation2;
-
-        // Adjust position based on angle and length
-        branch1Mesh.position.y = y + (length1 / 2) * Math.cos(angle1);
-        branch1Mesh.position.x = x + (length1 / 2) * Math.sin(angle1) * Math.sin(rotation1);
-        branch1Mesh.position.z = z + (length1 / 2) * Math.sin(angle1) * Math.cos(rotation1);
-
-        branch2Mesh.position.y = y  + (length2 / 2) * Math.cos(angle2);
-        branch2Mesh.position.x = x + (length2 / 2) * Math.sin(angle2) * Math.sin(rotation2);
-        branch2Mesh.position.z = z + (length2 / 2) * Math.sin(angle2) * Math.cos(rotation2);
-
-
-
-        this.treeGroup.add(branch1Mesh);
-        this.treeGroup.add(branch2Mesh);
-
-        const tipX1 = x + length1 * Math.sin(angle1) * Math.sin(rotation1);
-        const tipY1 = y + parentLength + length1 * Math.cos(angle1);
-        const tipZ1 = z + length1 * Math.sin(angle1) * Math.cos(rotation1);
-        
-        const tipX2 = x + length2 * Math.sin(angle2) * Math.sin(rotation2);
-        const tipY2 = y + parentLength + length2 * Math.cos(angle2);
-        const tipZ2 = z + length2 * Math.sin(angle2) * Math.cos(rotation2);
-        
-        
-        // Recur for child branches
-        this.generateBranches(tipX1, tipY1, tipZ1, branch1Diameter, length1);
-        this.generateBranches(tipX2, tipY2, tipZ2, branch2Diameter, length2);
-}
-
+    }
+    
     addToScene(scene) {
         scene.add(this.treeGroup);
+        this.treeGroup.generated = true;
     }
 }
 

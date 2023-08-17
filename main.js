@@ -362,6 +362,16 @@ if (index > -1) {
       }
 
   collapse(unsolved, grid);
+  //traverse the collapsed grid, if it is a open land tiles[0] , add a tree
+  for (let i = 0; i < cols; i++) {
+    for (let j = 0; j < rows; j++) {
+    if (grid[i][j].chosen.index === 0 && rng.nextFloat() < 0.15){
+      const pine = new PineTree(rng.nextInt(15)+3 ,i*6 ,j * 6);
+      pine.addToScene(scene);
+      pine.generatedBlock = true;
+    }
+  }
+}
 }
 
 function collapse(unsolved, grid) {
@@ -418,6 +428,26 @@ function clearScene() {
   // Remove each object from the scene
   objectsToRemove.forEach((object) => {
     scene.remove(object);
+  });
+  //the pines should be removed
+  removeAllPinesFromScene(scene);
+
+}
+
+function removeAllPinesFromScene(scene) {
+  // Get all the tree groups (PineTree objects) from the scene
+  const pineGroupsToRemove = scene.children.filter(object => object.generated === true);
+
+  // Iterate over each tree group and remove it from the scene
+  pineGroupsToRemove.forEach(treeGroup => {
+      // Optional: Dispose of geometries and materials to free up GPU resources
+      treeGroup.traverse(child => {
+          child.geometry?.dispose();
+          child.material?.dispose();
+      });
+
+      // Remove the tree group from the scene
+      scene.remove(treeGroup);
   });
 }
 
@@ -530,6 +560,9 @@ function animate() {
   }
 
 }
+
+
+
 animate(); //call the loop
 
 window.addEventListener('resize', onWindowResize, false);
@@ -543,18 +576,5 @@ function onWindowResize() {
 }
 
 
-const pine = new PineTree(15, 40, 40, 0.5, 30, 0.3);
-pine.addToScene(scene);
-//add a cylinder at the pine tree's position
-const cylinderGeometry = new THREE.CylinderGeometry(0.5, 0.5, 5, 32);
-const cylinderMaterial = new THREE.MeshStandardMaterial({
-  color: 0x00ff00,
-  side: THREE.DoubleSide,
-});
-const cylinder = new THREE.Mesh(cylinderGeometry, cylinderMaterial);
-cylinder.position.set(40, 0, 40);
-scene.add(cylinder);
-
-
-
-
+// const pine = new PineTree(30, 40, 40);
+// pine.addToScene(scene);
