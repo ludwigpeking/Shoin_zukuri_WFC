@@ -1,11 +1,9 @@
-//I try to create a procedural 3D tree with three.js. the constructor should be: new PineTree(height, x, z), remember in three.js, the coordinate is y-up
-
-//draw method:
-// a trunk spawns from the ground, goes up the length, parameter * height * randomness, diameter is parameter2*height * randomness, then at the top, it becomes two branches, that does horizontal, the y axis rotation is random. but the two branch should rotate in opposite direction. the two branches has randomly distributed diameters, squared diameter of branch1 plus squared diameter of branch2 equals squared diameter of the trunk * 80%. the branch with larger diameter should turn from horizontal to upward sooner. the turn should be curvy. after all the weight of these branches should be balanced around the trunk they spawn from. when each branch reaches the end, it should recur new spawing of two branches, following the same rule. but when the branch become very small, like its diameter is smaller than 0.05. it does not spawn branches but grow a blob of leaves represented as a sphere, which should have green translucent material. the branches should be dark blow and opaque. the trunk should be dark brown and opaque. 
+// Purpose: Generates a pine tree
 import * as THREE from 'three';
+import { OBJExporter } from 'three/examples/jsm/exporters/OBJExporter.js';
 
 class PineTree {
-    constructor(height, x, z, expansion = 1, slenderness = 30 , trunkRatio = 0.2) {
+    constructor(height, x, z, expansion = 0.5, slenderness = 50 , trunkRatio = 0.2, leafThreshold = 0.15, spawningStength = 1, leafBlobPropotion = 0.5, leafSize = 20, curve = true, leafColor = 0x558822, leafOpacity = 0.3, castShadow = true  ) {
         // console.log("tree total height", height, "tree x", x, "tree z", z, "expansion", expansion, "slenderness", slenderness, "trunkRatio", trunkRatio)
         this.height = height; //assumed total height of the tree, mostly 1.5m to 20m
         this.x = x;
@@ -13,51 +11,118 @@ class PineTree {
         this.expansion = expansion; //branch horizontal expansion, 0.5 is normal
         this.slenderness = slenderness; //height thickness ratio, 50-80 is normal
         this.trunkRatio = trunkRatio; //trunk height ratio, 0.2-0.4 is normal
-
-        this.woodMaterial = new THREE.MeshBasicMaterial({color: 0x332211}); // dark brown
-        this.leafMaterial = new THREE.MeshPhongMaterial({
-            color: 0x337711,
-            // shininess: 10,
-            // specular: 0x447722,
-            // emissive: 0x112200
-        });
-        
-        this.treeGroup = new THREE.Group();
-        this.treeGroup.position.set(this.x, 0, this.z);
+        this.leafThreshold = leafThreshold; //branch diameter threshold, below which it becomes a leaf
+        this.spawningStength = spawningStength; //branch spawning strength, 1 is normal
+        this.leafBlobPropotion = leafBlobPropotion; //leaf blob propotion, 0.5 is normal
+        this.leafSize = leafSize; //leaf size, 20 is normal
+        this.leafColor = leafColor; //leaf color, green
+        this.leafOpacity = leafOpacity; //leaf opacity, 0.2 is normal
+        this.curve = curve; //curve or straight branches, false is normal
+        this.castShadow = castShadow; //cast shadow or not
+        this.woodMaterial = new THREE.MeshStandardMaterial({color: 0x553311}); // dark brown
+        this.leafMaterial = new THREE.MeshStandardMaterial({color: this.leafColor, transparent: true, opacity: this.leafOpacity}); // translucent green
         this.level = 0;
-        this.generateTrunk();
+        this.leafs = 0;
+        this.generateTrunk();//must be the last called
         
     }
 
     generateTrunk() {
-
+        this.treeGroup = new THREE.Group();
+        this.treeGroup.position.set(this.x, 0, this.z);
         //trunk height is 0.3 * height  * expansion and normal distribution
-        const trunkHeight = this.trunkRatio * this.height * normalRandom(0.15)  //0.3 is the average trunk height ratio
-        const trunkDiameter = this.height / 50 * normalRandom(0.15);
-        const trunkGeometry = new THREE.CylinderGeometry(trunkDiameter/2, trunkDiameter/2, trunkHeight);
+        const trunkHeight = this.trunkRatio * this.height * normalRandom(0.2)  //0.3 is the average trunk height ratio
+        const trunkDiameter = this.height / this.slenderness * normalRandom(0.2);
+        const trunkGeometry = new THREE.CylinderGeometry(trunkDiameter/2*0.8, trunkDiameter/2 , trunkHeight,6);
         const trunkMesh = new THREE.Mesh(trunkGeometry, this.woodMaterial);
         trunkMesh.position.y = trunkHeight/2;  // Adjust so trunk begins at y=0
         this.treeGroup.add(trunkMesh);
         // console.log("trunk height: " + trunkHeight.toFixed(2) + " trunk diameter: " + trunkDiameter.toFixed(2))
         this.level += 1;
         // Generate branches at the top of the trunk
-        this.generateBranches(0, trunkHeight, 0, trunkDiameter, trunkHeight);
-
-       
+        if (this.curve) {
+            this.generateCurveBranches(0, trunkHeight, 0, trunkDiameter);
+        } else {
+            this.generateBranches(0, trunkHeight, 0, trunkDiameter);
+        }
     }
-
-    generateBranches(startX, startY, startZ, parentDiameter, parentLength) {
-        if (parentDiameter < 0.1) {
-            const leafGeometry = new THREE.SphereGeometry(parentDiameter*30, 6, 6);
+    generateCurveBranches(startX, startY, startZ, parentDiameter) {
+        if (parentDiameter < this.leafThreshold) {
+            const leafGeometry = new THREE.SphereGeometry(parentDiameter * this.leafSize, 6, 3);
             const leafMesh = new THREE.Mesh(leafGeometry, this.leafMaterial);
             leafMesh.position.set(startX, startY, startZ);
-            leafMesh.scale.set(1, 0.3, 1);
-            leafMesh.castShadow = true;
-            leafMesh.receiveShadow = true;
+            leafMesh.scale.set(1, this.leafBlobPropotion, 1);
             this.treeGroup.add(leafMesh);
+            this.leafs += 1;
             return;
         } else {
+            let pivot1 = new THREE.Object3D();
+            let pivot2 = new THREE.Object3D();
+            this.treeGroup.add(pivot1);
+            this.treeGroup.add(pivot2);
+            pivot1.position.set(startX, startY, startZ);
+            pivot2.position.set(startX, startY, startZ);
+            const d1 = Math.sqrt(this.spawningStength * parentDiameter * parentDiameter)  * (Math.random()*0.8+0.1);
+            const d2 = Math.sqrt(this.spawningStength * parentDiameter * parentDiameter - d1 * d1);
+            const rotationY1 = Math.random() * Math.PI;
+            const rotationY2 = rotationY1 + Math.PI;  // Opposite direction
+            const l1 = d1 * this.slenderness * this.trunkRatio ;
+            const s1 = l1 * this.expansion ;        
+            const prod = l1 * s1 * d1 **2;
+            const l2 = Math.sqrt(prod/(d2 * this.expansion));
+            const s2 = d1 **2 * l1 * s1 / (d2** 1* l2);
+     
 
+            const startPoint1 = new THREE.Vector3(0, 0, 0);
+            const startControlPoint1 = new THREE.Vector3(s1/2, l1/3, 0);  // Control direction at start
+            const endControlPoint1 = new THREE.Vector3(s1, l1/2, 0);  // Control direction at end
+            const endPoint1 = new THREE.Vector3(s1, l1, 0);
+            const curve1 = new THREE.CubicBezierCurve3(startPoint1, startControlPoint1, endControlPoint1, endPoint1);
+            const segments = 10;  // Number of segments along the curve
+            const radiusSegments = 6;  // Number of segments around the tube
+            const closed = false;
+            const tubeGeometry1 = new THREE.TubeGeometry(curve1, segments, d1/2, radiusSegments, closed);
+            const branch1Mesh = new THREE.Mesh(tubeGeometry1, this.woodMaterial);
+            pivot1.add(branch1Mesh);
+            pivot1.rotation.y = rotationY1;
+
+            const startPoint2 = new THREE.Vector3(0, 0, 0);
+            const startControlPoint2 = new THREE.Vector3(s2/2, l2/3, 0);  // Control direction at start
+            const endControlPoint2 = new THREE.Vector3(s2, l2/2, 0);  // Control direction at end
+            const endPoint2 = new THREE.Vector3(s2, l2, 0);
+            const curve2 = new THREE.CubicBezierCurve3(startPoint2, startControlPoint2, endControlPoint2, endPoint2);
+            const tubeGeometry2 = new THREE.TubeGeometry(curve2, segments, d2/2, radiusSegments, closed);
+            const branch2Mesh = new THREE.Mesh(tubeGeometry2, this.woodMaterial);
+            pivot2.add(branch2Mesh);
+            pivot2.rotation.y = rotationY2;
+            
+            let tipLocalPosition1 = new THREE.Vector3(s1, l1, 0);
+            let tipLocalPosition2 = new THREE.Vector3(s2, l2, 0);
+            pivot1.updateMatrixWorld();
+            let tipWorldPosition1 = tipLocalPosition1.applyMatrix4(pivot1.matrixWorld);
+
+            pivot2.updateMatrixWorld();
+            let tipWorldPosition2 = tipLocalPosition2.applyMatrix4(pivot2.matrixWorld);
+
+            this.level += 1;
+            this.generateCurveBranches(tipWorldPosition1.x, tipWorldPosition1.y, tipWorldPosition1.z, d1, l1);
+            this.generateCurveBranches(tipWorldPosition2.x, tipWorldPosition2.y, tipWorldPosition2.z, d2, l2);
+
+
+
+        }
+    }
+
+    generateBranches(startX, startY, startZ, parentDiameter) {
+        if (parentDiameter < this.leafThreshold) {
+            const leafGeometry = new THREE.SphereGeometry(parentDiameter * this.leafSize, 6, 3);
+            const leafMesh = new THREE.Mesh(leafGeometry, this.leafMaterial);
+            leafMesh.position.set(startX, startY, startZ);
+            leafMesh.scale.set(1, this.leafBlobPropotion, 1);
+            this.treeGroup.add(leafMesh);
+            this.leafs += 1;
+            return;
+        } else {
             let pivot1 = new THREE.Object3D();
             let pivot2 = new THREE.Object3D();
             
@@ -69,54 +134,37 @@ class PineTree {
             pivot2.position.set(startX, startY, startZ);
         
             // Calculate diameters based on parent's diameter
-            // let d1 = Math.sqrt(0.9 * parentDiameter * parentDiameter * (Math.random()));
-            let d1 = Math.sqrt(0.9 * parentDiameter * parentDiameter /2);
-            let d2 = Math.sqrt(0.9 * parentDiameter * parentDiameter - d1 * d1);
-            //give a 50% chance for d1 and d2 to switch value
-            if (Math.random() > 0.5) {
-                let temp = d1;
-                d1 = d2;
-                d2 = temp;
-            }
+            const d1 = Math.sqrt(this.spawningStength * parentDiameter * parentDiameter)  * (Math.random()*0.8+0.1);
+            // const d1 = Math.sqrt(this.spawningStength * parentDiameter * parentDiameter /2);
+            const d2 = Math.sqrt(this.spawningStength * parentDiameter * parentDiameter - d1 * d1);
         
             // Random y-axis rotation
             const rotationY1 = Math.random() * Math.PI;
             const rotationY2 = rotationY1;  // Opposite direction
-            const l1 = d1 * this.slenderness * 0.5 ;
+            const l1 = d1 * this.slenderness * this.trunkRatio ;
             const s1 = l1 * this.expansion ;
             // const l1 = d1 * this.slenderness * 0.5 * normalRandom(0.1);
             // const s1 = l1 * this.expansion * normalRandom(0.1);
         
-            const prod = l1 * s1 * d1 * d1;
+            const prod = l1 * s1 * d1 **2;
             const l2 = Math.sqrt(prod/(d2 * this.expansion));
             
-            const s2 = d1 *d1 * l1 * s1 / (d2 * d2 * l2);
-            // console.log(" d1 ", d1, " d2 ", d2, " l1 ", l1, " l2 ", l2, " s1 ", s1, " s2 ", prod)
-            const rotationZ1 = Math.atan(s1 / l1); 
-            const rotationZ2 = -Math.atan(s2 / l2);
+            const s2 = d1 **2 * l1 * s1 / (d2** 1* l2);
+            const rotationZ1 = Math.asin(s1 / l1); 
+            const rotationZ2 = -Math.asin (s2 / l2);
             
-            let changingWoodMaterial = new THREE.MeshBasicMaterial({color: 0x654321}); // dark brown
-            let hsl = new THREE.Color(this.woodMaterial.color.getHex()).getHSL({});
-            hsl.h = hsl.h+  this.level * 0.02;
-            // console.log(hsl);
-            let newColor = new THREE.Color().setHSL(hsl.h, 100, hsl.l);
-            changingWoodMaterial.color = newColor;    
-            const branch1Geometry = new THREE.CylinderGeometry(d1/2, d1/2, l1);
-            const branch1Mesh = new THREE.Mesh(branch1Geometry, changingWoodMaterial);
-            branch1Mesh.castShadow = true;
-            const branch2Geometry = new THREE.CylinderGeometry(d2/2, d2/2, l2);
-            const branch2Mesh = new THREE.Mesh(branch2Geometry, changingWoodMaterial);
-            branch2Mesh.castShadow = true;
+  
+            const branch1Geometry = new THREE.CylinderGeometry(d1/2 * 0.8, d1/2 , l1);
+            const branch1Mesh = new THREE.Mesh(branch1Geometry, this.woodMaterial);
+            const branch2Geometry = new THREE.CylinderGeometry(d2/2 *0.8 , d2/2 , l2);
+            const branch2Mesh = new THREE.Mesh(branch2Geometry, this.woodMaterial);
             
             // Adjust the position of the branches within their respective pivots
             branch1Mesh.position.y = l1 / 2;
-            // console.log("branch1Mesh original position", branch1Mesh.position )
             branch2Mesh.position.y = l2 / 2;
             
             // Add the branches to their respective pivots
             pivot1.add(branch1Mesh);
-            // console.log("branch1Mesh relative position in pivot", branch1Mesh.position )
-            // console.log("pivot position", pivot1.position);
             pivot2.add(branch2Mesh);
             
             // Apply rotations to the pivots
@@ -128,33 +176,46 @@ class PineTree {
             
             // Calculate the world coordinates for the tips of the branches
             let tipLocalPosition1 = new THREE.Vector3(0, l1, 0);
-            
             let tipLocalPosition2 = new THREE.Vector3(0, l2, 0);
 
             pivot1.updateMatrixWorld();
             let tipWorldPosition1 = tipLocalPosition1.applyMatrix4(pivot1.matrixWorld);
-
             pivot2.updateMatrixWorld();
             let tipWorldPosition2 = tipLocalPosition2.applyMatrix4(pivot2.matrixWorld);
 
             this.level += 1;
-
-            // console.log(" level: " + this.level)
-            // console.log(" branch 1 start point:" + startX.toFixed(2) +", "+ startY.toFixed(2) +", "+ startZ.toFixed(2)+", " + " branch1 length: " + l1.toFixed(2) + " branch1 diameter: " + d1.toFixed(2)  + " branch1 tip position: " + tipWorldPosition1.x.toFixed(2) +", " + tipWorldPosition1.y.toFixed(2) +", " + tipWorldPosition1.z.toFixed(2));
-            // console.log("branch 2 start point:" + startX.toFixed(2) +", "+ startY.toFixed(2) +", "+ startZ.toFixed(2) +", "+ " branch2 length: " + l2.toFixed(2) + " branch2 diameter: " + d2.toFixed(2)  + " branch2 tip position: " + tipWorldPosition2.x.toFixed(2) +", " + tipWorldPosition2.y.toFixed(2) +", " + tipWorldPosition2.z.toFixed(2));
-            
             // Recursively generate branches
-            this.generateBranches(tipWorldPosition1.x, tipWorldPosition1.y, tipWorldPosition1.z, d1);
-            this.generateBranches(tipWorldPosition2.x, tipWorldPosition2.y, tipWorldPosition2.z, d2);
-        
+            this.generateBranches(tipWorldPosition1.x, tipWorldPosition1.y, tipWorldPosition1.z, d1, l1);
+            this.generateBranches(tipWorldPosition2.x, tipWorldPosition2.y, tipWorldPosition2.z, d2, l2);
         }
     }
-    
     addToScene(scene) {
+        console.log(" number of leafs: ",this.leafs);
         scene.add(this.treeGroup);
         this.treeGroup.generated = true;
-        this.treeGroup.castShadow = true;
+        this.treeGroup.castShadow = this.castShadow;
     }
+    exportToOBJ() {
+        const exporter = new OBJExporter();
+        const result = exporter.parse(this.treeGroup);
+        
+        const blob = new Blob([result], { type: 'text/plain' });
+        const url = URL.createObjectURL(blob);
+
+        const a = document.createElement('a');
+        a.style.display = 'none';
+        a.href = url;
+        a.download = 'pine_tree.obj';
+
+        document.body.appendChild(a);
+        a.click();
+
+        setTimeout(function() {
+            document.body.removeChild(a);
+            window.URL.revokeObjectURL(url);
+        }, 0);
+    }
+    
 }
 
 function normalRandom(standardDeviation) {
@@ -165,3 +226,5 @@ function normalRandom(standardDeviation) {
 }
 
 export default PineTree;
+
+

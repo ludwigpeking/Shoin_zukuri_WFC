@@ -4,11 +4,10 @@
   "description": "",
   "main": "GLTFLoader.js",
   "scripts": {
-    "dev": "vite", 
+    "dev": "vite",
     "build": "vite build",
     "serve": "vite preview"
-  }
-  ,
+  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/ludwigpeking/Shoin_zukuri_WFC.git"
@@ -21,6 +20,7 @@
   },
   "homepage": "https://github.com/ludwigpeking/Shoin_zukuri_WFC#readme",
   "dependencies": {
+    "lil-gui": "^0.18.2",
     "three": "^0.155.0"
   },
   "devDependencies": {

@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
 import PineTree from './Pine';
+import * as dat from 'lil-gui';
 
 let buildingBlocks = [];
 let cols = 7;
@@ -12,6 +13,8 @@ const defaultSeed = 19;
 let openEdge = true;
 let captureImage = false;
 
+const gui = new dat.GUI();
+const global ={};
 
 // Get a reference to the checkbox
 const checkbox = document.getElementById('myCheckbox');
@@ -19,7 +22,8 @@ const checkbox = document.getElementById('myCheckbox');
 // Add an event listener
 checkbox.addEventListener('change', function() {
     openEdge = this.checked;  
-    console.log(openEdge);}); 
+    // console.log(openEdge);
+  }); 
 
 
 class SeededRandom {
@@ -212,7 +216,7 @@ function compareEdge(a, b) {
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(0xccddff);
 const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-camera.position.set(cols * 8 , 12, rows * 8 );
+camera.position.set(cols * 7 , 2, rows * 7 );
 const renderer = new THREE.WebGLRenderer();
 renderer.setSize(window.innerWidth, window.innerHeight);
 document.body.appendChild(renderer.domElement);
@@ -241,24 +245,15 @@ document.getElementById('setSeed').addEventListener('click', function() {
 document.getElementById('seedInput').value = defaultSeed;
 
 //add a directional light
-const directionalLight = new THREE.DirectionalLight(0xffffee, 2);
-directionalLight.position.set(-100, 100, 100); 
-directionalLight.target.position.set(0, 0, 0); 
+const directionalLight = new THREE.DirectionalLight(0xffffee, 0.5);
+directionalLight.position.set(-200, 100, 100);
+directionalLight.target.position.set(0, 0, 0);
 directionalLight.castShadow = true;
-directionalLight.shadow.camera.near = 0.5;
-directionalLight.shadow.camera.far = 500;
-directionalLight.shadow.camera.left = -80; 
-directionalLight.shadow.camera.right = 80; 
-directionalLight.shadow.camera.top = 80; 
-directionalLight.shadow.camera.bottom = -80; 
-directionalLight.shadow.mapSize.width = 512;
-directionalLight.shadow.mapSize.height = 512;
-directionalLight.shadow.darkness = 0.3;//set the shadow darker
-directionalLight.shadow.bias = -0.005;
-scene.add(directionalLight);
-scene.add(directionalLight.target); 
-const cameraHelper = new THREE.CameraHelper(directionalLight.shadow.camera);
-scene.add(cameraHelper);
+Object.assign(directionalLight.shadow.camera, {  near: 0.5,  far: 500,  left: -80,  right: 80,  top: 80,  bottom: -80});
+Object.assign(directionalLight.shadow.mapSize, {  width: 2048,  height: 2048});
+Object.assign(directionalLight.shadow, {darkness: 1,  bias: -0.005});
+scene.add(directionalLight, directionalLight.target, new THREE.CameraHelper(directionalLight.shadow.camera));
+
 
 const controls = new OrbitControls(camera, renderer.domElement);
 controls.enableDamping = true;
@@ -293,12 +288,12 @@ scene.add(axesHelper);
 // Add environmental lighting
 const cubeTextureLoader = new THREE.CubeTextureLoader();
 const environmentMapTexture = cubeTextureLoader.load([
-  '/cubeTexture/posx.jpg',
-  '/cubeTexture/negx.jpg',
-  '/cubeTexture/posy.jpg',
-  '/cubeTexture/negy.jpg',
-  '/cubeTexture/posz.jpg',
-  '/cubeTexture/negz.jpg',
+  '/cubeTexture/2/px.png',
+  '/cubeTexture/2/nx.png',
+  '/cubeTexture/2/py.png',
+  '/cubeTexture/2/ny.png',
+  '/cubeTexture/2/pz.png',
+  '/cubeTexture/2/nz.png',
 ]);
 scene.environment = environmentMapTexture;
 scene.background = environmentMapTexture;
@@ -325,7 +320,7 @@ function startOver() {
   }
   if(rng.nextFloat() < 0.5){
   let randomCell = grid[Math.floor(rng.nextFloat(cols / 3)+ cols / 3 )][Math.floor(rng.nextFloat(rows / 3)+rows / 3)]
-  console.log('tower',randomCell.i, randomCell.j)
+  // console.log('tower',randomCell.i, randomCell.j)
   randomCell.chosen = tiles[23];
   randomCell.collapsed = true;
   randomCell.checkNeighbors(grid);
@@ -336,7 +331,7 @@ if (index > -1) {
  
   if(rng.nextFloat() < 0.5){
     let randomCell = grid[cols-1][rows-1];
-    console.log('pond',randomCell.i, randomCell.j)
+    // console.log('pond',randomCell.i, randomCell.j)
     randomCell.chosen = tiles[3];
     randomCell.collapsed = true;
     randomCell.checkNeighbors(grid);
@@ -366,7 +361,9 @@ if (index > -1) {
   for (let i = 0; i < cols; i++) {
     for (let j = 0; j < rows; j++) {
     if (grid[i][j].chosen.index === 0 && rng.nextFloat() < 0.15){
-      const pine = new PineTree(rng.nextInt(15)+3 ,i*6 ,j * 6);
+      const pine = new PineTree(rng.nextInt(15)+5 ,i*6 ,j * 6);
+      console.log('pine',i,j, pine)
+
       pine.addToScene(scene);
       pine.generatedBlock = true;
     }
@@ -406,6 +403,8 @@ function collapse(unsolved, grid) {
         house.rotation.set(0, grid[i][j].chosen.ro * Math.PI / 2 , 0);
         // Add the house to the scene
         house.generatedBlock = true;
+        
+        // console.log('house',house);
         scene.add(house);
       }
     }
@@ -520,7 +519,7 @@ const plane = new THREE.Mesh(planeGeometry, planeMaterial);
 plane.receiveShadow = true;
 plane.rotation.x = Math.PI / 2;
 plane.position.y = -1;
-scene.add(plane);
+// scene.add(plane);
 
 function regenerate() {
   // Generate a new seed based on the current time
