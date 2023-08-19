@@ -215,7 +215,7 @@ function compareEdge(a, b) {
 // Create scene, camera, and renderer
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(0xccddff);
-const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
 camera.position.set(cols * 3 , 3, rows * 3 );
 
 const cubeCamera = new THREE.CubeCamera(0.1, 1000, 256); // near, far, resolution
