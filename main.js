@@ -216,7 +216,12 @@ function compareEdge(a, b) {
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(0xccddff);
 const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-camera.position.set(cols * 7 , 2, rows * 7 );
+camera.position.set(cols * 3 , 3, rows * 3 );
+
+const cubeCamera = new THREE.CubeCamera(0.1, 1000, 256); // near, far, resolution
+scene.add(cubeCamera);
+
+
 const renderer = new THREE.WebGLRenderer();
 renderer.setSize(window.innerWidth, window.innerHeight);
 document.body.appendChild(renderer.domElement);
@@ -224,6 +229,8 @@ renderer.shadowMap.enabled = true;
 renderer.shadowMap.needsUpdate = true;
 renderer.toneMappingExposure = 0.5;
 renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+
+
 
 document.getElementById('setSeed').addEventListener('click', function() {
   let seedValue = document.getElementById('seedInput').value;
@@ -252,7 +259,8 @@ directionalLight.castShadow = true;
 Object.assign(directionalLight.shadow.camera, {  near: 0.5,  far: 500,  left: -80,  right: 80,  top: 80,  bottom: -80});
 Object.assign(directionalLight.shadow.mapSize, {  width: 2048,  height: 2048});
 Object.assign(directionalLight.shadow, {darkness: 1,  bias: -0.005});
-scene.add(directionalLight, directionalLight.target, new THREE.CameraHelper(directionalLight.shadow.camera));
+scene.add(directionalLight);
+// scene.add ( directionalLight.target, new THREE.CameraHelper(directionalLight.shadow.camera));
 
 
 const controls = new OrbitControls(camera, renderer.domElement);
@@ -278,12 +286,12 @@ orbitHelperYZ.rotation.y = Math.PI / 2;
 orbitHelperXZ.rotation.x = Math.PI / 2;
 
 // Add the orbit helpers to the scene
-scene.add(orbitHelperXY, orbitHelperYZ, orbitHelperXZ);
+// scene.add(orbitHelperXY, orbitHelperYZ, orbitHelperXZ);
 
 
 // Create an AxesHelper with a given size
 const axesHelper = new THREE.AxesHelper(50);
-scene.add(axesHelper);
+// scene.add(axesHelper);
 
 // Add environmental lighting
 const cubeTextureLoader = new THREE.CubeTextureLoader();
@@ -298,6 +306,14 @@ const environmentMapTexture = cubeTextureLoader.load([
 scene.environment = environmentMapTexture;
 scene.background = environmentMapTexture;
 const manager = new THREE.LoadingManager();
+
+const reflectiveMaterial = new THREE.MeshStandardMaterial({
+  color: 0x001122, // or whatever color you want
+  metalness: 0,
+  roughness: 0.1,
+  envMap: environmentMapTexture
+});
+console.log(reflectiveMaterial);
 
 manager.onLoad = function() {
   // Called when all resources are loaded
@@ -360,10 +376,8 @@ if (index > -1) {
   //traverse the collapsed grid, if it is a open land tiles[0] , add a tree
   for (let i = 0; i < cols; i++) {
     for (let j = 0; j < rows; j++) {
-    if (grid[i][j].chosen.index === 0 && rng.nextFloat() < 0.15){
-      const pine = new PineTree(rng.nextInt(15)+5 ,i*6 ,j * 6);
-      console.log('pine',i,j, pine)
-
+    if (grid[i][j].chosen.index === 0 && rng.nextFloat() < 0.10){
+      const pine = new PineTree(rng.nextInt(25) ,i*6 -cols*3 ,j * 6 - rows *3);
       pine.addToScene(scene);
       pine.generatedBlock = true;
     }
@@ -398,7 +412,7 @@ function collapse(unsolved, grid) {
         house.visible = true;
         house.castShadow = true; // this building will cast shadows
         house.receiveShadow = true; // this building will receive shadows
-        house.position.set(i*6 , 0, j * 6);
+        house.position.set(i*6 - cols*3 , 0, j * 6 - rows*3);
         house.scale.set(1, 1, -1); //to adapt from blender
         house.rotation.set(0, grid[i][j].chosen.ro * Math.PI / 2 , 0);
         // Add the house to the scene
@@ -409,6 +423,24 @@ function collapse(unsolved, grid) {
       }
     }
   }
+  // Hide reflective meshes
+  // scene.traverse((child) => {
+  //   if (child.isMesh && child.material.name.startsWith('water')) {
+  //     child.visible = false;
+  //   }
+  // });
+
+  // // Set up CubeCamera and capture the environment
+  // cubeCamera.update(renderer, scene);
+
+  // // Show reflective meshes and set the environment map
+  // scene.traverse((child) => {
+  //   if (child.isMesh && child.material.name.startsWith('water')) {
+  //     child.visible = true;
+  //     child.material.envMap = cubeCamera.renderTarget.texture;
+  //     child.material.needsUpdate = true; // Important to update the material
+  //   }
+  // });
 }
 
 function checkValid(arr, valid) {
@@ -467,7 +499,7 @@ function loadBuildingBlocks() {
         // Store building blocks for future reference
         buildingBlocks[parseInt(child.name)] = child;
     });
-    
+    console.log(gltf.scene);
     scene.add(gltf.scene);
 
     gltf.scene.traverse((child) => {
@@ -475,11 +507,13 @@ function loadBuildingBlocks() {
         // Enable casting and receiving shadows for the mesh
         child.castShadow = true;
         child.receiveShadow = true;
-    
-        // Modify material properties if needed
-        if (child.material.transparent) {
-          child.material.transparent = true;
+        if (child.material.name.startsWith('water')) {
+          child.material = reflectiveMaterial;
         }
+        // Modify material properties if needed
+        // if (!child.material.transparent) {
+        //   child.material.transparent = true;
+        // }
       }
     });
     manager.itemEnd('buildingBlocks');
@@ -560,8 +594,6 @@ function animate() {
 
 }
 
-
-
 animate(); //call the loop
 
 window.addEventListener('resize', onWindowResize, false);
@@ -573,7 +605,10 @@ function onWindowResize() {
   // Update renderer's size
   renderer.setSize(window.innerWidth, window.innerHeight);
 }
-
-
-// const pine = new PineTree(30, 40, 40);
-// pine.addToScene(scene);
+const maxTextureSize = renderer.capabilities.maxTextureSize;
+console.log('Max texture size: ' + maxTextureSize);
+// renderer.gammaFactor = 2.2; // Use sRGB encoding for textures and colors
+// renderer.outputEncoding = THREE.sRGBEncoding;
+// environmentMapTexture.encoding = THREE.sRGBEncoding;
+// reflectiveMaterial.metalness = 1; // Make it fully metallic
+// reflectiveMaterial.roughness = 0; // Make it completely smooth

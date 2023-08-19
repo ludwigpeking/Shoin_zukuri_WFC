@@ -3,7 +3,7 @@ import * as THREE from 'three';
 import { OBJExporter } from 'three/examples/jsm/exporters/OBJExporter.js';
 
 class PineTree {
-    constructor(height, x, z, expansion = 0.5, slenderness = 50 , trunkRatio = 0.2, leafThreshold = 0.15, spawningStength = 1, leafBlobPropotion = 0.5, leafSize = 20, curve = true, leafColor = 0x558822, leafOpacity = 0.3, castShadow = true  ) {
+    constructor(height, x, z, expansion = 0.9, slenderness = 50 , trunkRatio = 0.2, leafThreshold = 0.15, spawningStength = 1, leafBlobPropotion = 0.5, leafSize = 20, curve = true, leafColor = 0x558822, leafOpacity = 0.5, castShadow = true  ) {
         // console.log("tree total height", height, "tree x", x, "tree z", z, "expansion", expansion, "slenderness", slenderness, "trunkRatio", trunkRatio)
         this.height = height; //assumed total height of the tree, mostly 1.5m to 20m
         this.x = x;
@@ -190,7 +190,7 @@ class PineTree {
         }
     }
     addToScene(scene) {
-        console.log(" number of leafs: ",this.leafs);
+        // console.log(" number of leafs: ",this.leafs);
         scene.add(this.treeGroup);
         this.treeGroup.generated = true;
         this.treeGroup.castShadow = this.castShadow;
