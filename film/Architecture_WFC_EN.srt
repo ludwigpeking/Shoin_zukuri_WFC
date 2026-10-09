@@ -1,0 +1,235 @@
+1
+00:00:00,900 --> 00:00:08,168
+Today I continue with my experiments in architecture with the wave function collapse algorithm, WFC.
+
+2
+00:00:08,668 --> 00:00:12,038
+It is also a little of my own story of learning graphics programming.
+
+3
+00:00:12,538 --> 00:00:18,653
+My friend, Mr. P-xiaoer, an engineer and influencer, told me about this algorithm in 2022.
+
+4
+00:00:21,153 --> 00:00:25,917
+WFC has inherent limits: it does not suit problems with many layers of hierarchy.
+
+5
+00:00:26,417 --> 00:00:30,966
+But it does suit building some of the basic logic at the tectonic level of architecture.
+
+6
+00:00:31,466 --> 00:00:35,208
+Once we have learned it, we naturally want to squeeze the value out of it
+
+7
+00:00:35,208 --> 00:00:38,488
+and, starting from our own profession, draw inspiration from it.
+
+8
+00:00:38,988 --> 00:00:47,757
+In 2022, with my floor plan generator only roughly working, I found the next subject to experiment on: Asian classical architecture.
+
+9
+00:00:48,257 --> 00:00:53,926
+Classical architecture is also rich in hierarchy by nature, but its construction often follows set routines.
+
+10
+00:00:54,426 --> 00:00:57,529
+Those routines sometimes define its very form, on the surface.
+
+11
+00:01:00,229 --> 00:01:07,764
+As it happened, I had just picked up some 3D web technology from Bruno Simon's online course, which gave me the drive to start this experiment.
+
+12
+00:01:08,264 --> 00:01:13,073
+The knowledge of the algorithm came from the talks of Oskar Stålberg and Professor Daniel Shiffman.
+
+13
+00:01:13,573 --> 00:01:19,723
+Professor Shiffman's lecture in particular gave concise code in JavaScript, a language I am fairly at home in.
+
+14
+00:01:20,223 --> 00:01:22,380
+These are where this project started.
+
+15
+00:01:22,880 --> 00:01:31,797
+Back then, while I was working on this, I found that pioneers were already doing something similar, and in richer detail than mine. It is the indie game EAVES, by KakaBobi Studio.
+
+16
+00:01:32,297 --> 00:01:35,657
+But that does not matter: in experiments, everyone does their own.
+
+17
+00:01:38,057 --> 00:01:40,797
+WFC is best known for generating game levels.
+
+18
+00:01:41,297 --> 00:01:46,263
+From an architect's point of view, what we value is its use as a tectonic grammar.
+
+19
+00:01:46,763 --> 00:01:51,957
+It suits producing order from the bottom up, tectonically, where one component meets another.
+
+20
+00:01:52,457 --> 00:01:56,464
+How ridges meet, how eaves turn a corner, whether a gutter may appear.
+
+21
+00:01:56,964 --> 00:02:03,412
+These rules of joining are the most distilled knowledge of traditional timber architecture, and some laws of nature.
+
+22
+00:02:03,912 --> 00:02:08,705
+What larger order to impose on top of this tectonic base is a question on another level.
+
+23
+00:02:09,205 --> 00:02:14,045
+This experiment sets those higher questions aside for now. They belong to the next experiment.
+
+24
+00:02:16,545 --> 00:02:22,955
+The kinds of block are very few: inside corners, outside corners, edges and middles, only a handful of forms.
+
+25
+00:02:23,455 --> 00:02:28,143
+Two neighbouring blocks fit together as long as the sections of their facing edges agree.
+
+26
+00:02:28,643 --> 00:02:34,126
+The code is surprisingly simple: it just encodes the edges of every block, three characters to an edge.
+
+27
+00:02:34,626 --> 00:02:38,972
+The characters abstract the shape of an edge, mainly its profile of heights.
+
+28
+00:02:39,472 --> 00:02:42,083
+Zero is the ground and minus one the water bottom;
+
+29
+00:02:42,083 --> 00:02:49,447
+one is the eave, two the low ridge of the shallower part, three the high ridge of the deeper building, and four the eave of the upper storey.
+
+30
+00:02:49,947 --> 00:02:54,954
+A few conditional statements decide whether two edges can join. Where they cannot, a warning is shown.
+
+31
+00:02:55,454 --> 00:02:58,591
+A few cases have to be ruled out with code written by hand.
+
+32
+00:02:59,091 --> 00:03:04,425
+For example, two roofs sloping down may not meet in a gutter that holds water,
+
+33
+00:03:04,425 --> 00:03:08,665
+and two valley corners may not face each other and form a pit.
+
+34
+00:03:11,365 --> 00:03:17,061
+These rules were first drawn cell by cell in a notebook. Every block numbered, every edge labelled with its heights.
+
+35
+00:03:17,561 --> 00:03:22,186
+Later they were sorted into 32 blocks, which I then reduced to 24.
+
+36
+00:03:22,686 --> 00:03:26,938
+Some of them are landscape elements: ground, water, a small bridge.
+
+37
+00:03:29,638 --> 00:03:31,741
+The modelling is done in Blender.
+
+38
+00:03:31,741 --> 00:03:37,349
+The models are still the ones I built by hand in 2023, which took about a whole weekend.
+
+39
+00:03:37,849 --> 00:03:40,556
+Even now such models are hard to hand over to AI,
+
+40
+00:03:40,556 --> 00:03:44,259
+whose grasp of a target with this many dimensions is still limited.
+
+41
+00:03:44,759 --> 00:03:46,674
+Who knows how that will look in another year.
+
+42
+00:03:49,574 --> 00:03:53,854
+When generating, every cell starts in a superposition of all possibilities.
+
+43
+00:03:54,354 --> 00:04:00,020
+The cell with the fewest possibilities collapses first, and its choice rules out some of its neighbours' options.
+
+44
+00:04:00,520 --> 00:04:05,413
+Cell by cell, buildings, verandas and ponds grow out of local rules.
+
+45
+00:04:05,913 --> 00:04:10,445
+The results generated this way are rather loose, because nothing in here evaluates them.
+
+46
+00:04:10,945 --> 00:04:21,706
+Loose as they are, they look less like the fairly regular official style of the imperial courts, and more like the warrior residences of Japan's Muromachi period, the style called shoin-zukuri.
+
+47
+00:04:25,206 --> 00:04:30,791
+Now that vibe coding has matured, I recently added features to add and remove building volumes by hand.
+
+48
+00:04:31,291 --> 00:04:33,762
+This way of playing is much the same as Townscaper.
+
+49
+00:04:37,062 --> 00:04:40,510
+The system does not only work on a straight, square grid;
+
+50
+00:04:40,510 --> 00:04:43,414
+it can go into any grid of quads, fixed or free.
+
+51
+00:04:43,914 --> 00:04:46,375
+For example the grid Stålberg uses in his game design.
+
+52
+00:04:46,875 --> 00:04:51,176
+On a gently bent grid, the results show a seemingly organic quality.
+
+53
+00:04:51,676 --> 00:04:55,836
+On a strongly twisted grid, they look quite modern, even high-tech.
+
+54
+00:04:56,336 --> 00:04:58,129
+I even took something from this:
+
+55
+00:04:58,129 --> 00:05:03,619
+classical architecture, once it gives up standardized dimensions, can be quite surprising in form.
+
+56
+00:05:16,019 --> 00:05:19,306
+Swap in another set of blocks, and you get another style.
+
+57
+00:05:19,806 --> 00:05:23,316
+Join several sets of blocks, and you get a mixture of typologies.
+
+58
+00:05:23,816 --> 00:05:27,499
+Let another set of forces govern how they mix, and an order of a higher level appears.
+
+59
+00:05:27,999 --> 00:05:29,960
+That is the direction this method is exploring.

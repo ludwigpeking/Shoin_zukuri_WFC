@@ -1,0 +1,69 @@
+[
+ {
+  "shot": "catalogue",
+  "frameCount": 620,
+  "kind": "catalogue"
+ },
+ {
+  "shot": "collapse",
+  "frameCount": 527,
+  "kind": "collapse",
+  "keptViewNumber": 2
+ },
+ {
+  "shot": "result_1",
+  "frameCount": 303,
+  "kind": "orbit",
+  "keptViewNumber": 2
+ },
+ {
+  "shot": "result_2",
+  "frameCount": 303,
+  "kind": "orbit",
+  "keptViewNumber": 5
+ },
+ {
+  "shot": "play",
+  "frameCount": 377,
+  "kind": "play"
+ },
+ {
+  "shot": "bent_1",
+  "frameCount": 166,
+  "kind": "orbit",
+  "mapKind": "bent",
+  "keptViewNumber": 1
+ },
+ {
+  "shot": "hex_1",
+  "frameCount": 91,
+  "kind": "orbit",
+  "mapKind": "hexagonal",
+  "keptViewNumber": 3
+ },
+ {
+  "shot": "hex_2",
+  "frameCount": 91,
+  "kind": "orbit",
+  "mapKind": "hexagonal",
+  "keptViewNumber": 4
+ },
+ {
+  "shot": "large_day",
+  "frameCount": 288,
+  "kind": "large_orbit",
+  "keptViewNumber": 6
+ },
+ {
+  "shot": "large_dusk",
+  "frameCount": 156,
+  "kind": "large_dusk",
+  "keptViewNumber": 6
+ },
+ {
+  "shot": "large_night",
+  "frameCount": 1,
+  "kind": "large_night",
+  "keptViewNumber": 6
+ }
+]

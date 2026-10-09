@@ -3,72 +3,307 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Building Generation</title>
+  <title>Shoin-zukuri</title>
 
   <style>
-    body { margin: 0; }
-    canvas { display: block; }
-    .checkbox-section {
-      align-items: left;
-      gap: 1px;
+    body {
+      margin: 0;
+      font-family: sans-serif;
+      font-size: 13px;
     }
-
-    #controls {
-      position: absolute;
-      top: 10px;
-      left: 10px;
-      background: #f0f0f0;
-      padding: 5px;
-      width: 150px;
-      align-items: center;
-    }
-
-    #myCheckbox {
-      position: relative;
-      
-    }
-    
-    .number-limit input {
-      left: 70px;
-      width: 30px;
+    canvas {
+      display: block;
     }
     button {
-      padding: 5px 10px;
-      border-width: 1px;
-      width: 100%;
-      background-color: azure;
+      padding: 6px 10px;
+      border: 1px solid #b8b8b8;
+      border-radius: 4px;
+      background: #ffffff;
       cursor: pointer;
-      margin: 10px 10px 10px 0;
+      font-size: 13px;
     }
-    label, a{
-      padding: 5px 5px;
+    button:hover {
+      background: #eef4f8;
+    }
+    button:disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+    }
+    button.active {
+      background: #2f3e48;
+      border-color: #2f3e48;
+      color: #ffffff;
+    }
+    .panel {
+      position: absolute;
+      background: rgba(245, 245, 242, 0.94);
+      border-radius: 6px;
+      box-shadow: 0 1px 6px rgba(0, 0, 0, 0.25);
+      padding: 10px;
+    }
+    .hint {
+      color: #555555;
+      font-size: 11px;
+      line-height: 1.4;
+    }
+
+    #toolbar {
+      top: 10px;
+      left: 10px;
+      width: 230px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    #toolbar section {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid #dddddd;
+    }
+    .sectionTitle {
+      font-size: 11px;
+      font-weight: bold;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: #6b7780;
+    }
+    .entropyRow {
+      display: flex;
+      justify-content: space-between;
+    }
+    .entropyTrack {
+      height: 6px;
+      border-radius: 3px;
+      background: #dfe3e6;
+      overflow: hidden;
+    }
+    .entropyBar {
+      height: 100%;
+      width: 0;
+      background: #6f8f3c;
+    }
+    .modeDescription {
+      background: #ffffff;
+      border-radius: 4px;
+      padding: 6px;
+    }
+    .buttonRow {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 6px;
+    }
+    #timeOfDay, #lensAngle, #bentGridAmplitude, #bentGridWavelength, #hexRingCountSlider {
+      width: 100%;
+    }
+    .buttonRow.threeButtons {
+      grid-template-columns: 1fr 1fr 1fr;
+    }
+    .sliderLabel {
+      display: flex;
+      justify-content: space-between;
+    }
+
+    #settings {
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 260px;
+      display: none;
+      z-index: 10;
+    }
+    #settings.open {
+      display: block;
+    }
+    #settings h3 {
+      margin: 0 0 8px 0;
+      font-size: 15px;
+    }
+    #settings label {
+      display: block;
+      padding: 3px 0;
+    }
+    #settings .sizeRow {
+      display: grid;
+      grid-template-columns: auto 50px auto 50px;
+      gap: 6px;
+      align-items: center;
+      margin: 8px 0;
+    }
+    #settings .seedRow {
+      display: grid;
+      grid-template-columns: auto 1fr;
+      gap: 6px;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+
+    #editor {
+      top: 10px;
+      right: 10px;
+      width: 520px;
+      max-height: calc(100vh - 40px);
+      overflow-y: auto;
+      display: none;
+    }
+    #editor .toolRow {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 4px;
+      margin-bottom: 8px;
+    }
+    #editor .toolRow button {
+      padding: 6px 2px;
+    }
+    kbd {
+      display: inline-block;
+      min-width: 12px;
+      padding: 0 4px;
+      border: 1px solid #b0b0b0;
+      border-bottom-width: 2px;
+      border-radius: 3px;
+      background: #f4f4f4;
+      color: #333333;
+      font-family: sans-serif;
+      font-size: 10px;
+      line-height: 15px;
+    }
+    button.active kbd {
+      background: #4a5a66;
+      border-color: #6c7c88;
+      color: #ffffff;
+    }
+    #blockPalette {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 4px;
+    }
+    #blockPalette button {
+      position: relative;
+      padding: 0;
+      border: 2px solid #d0d0d0;
+      background: #dde3ee;
+    }
+    #blockPalette button.active {
+      border-color: #e08000;
+    }
+    #blockPalette canvas {
+      width: 100%;
+    }
+    #blockPalette .blockNumber {
+      position: absolute;
+      left: 4px;
+      top: 2px;
+      font-size: 11px;
+      color: #333333;
+    }
+    #editor .editorStatus {
+      margin-top: 6px;
+    }
+    #conflictStatus.hasConflict {
+      color: #c00000;
+      font-weight: bold;
     }
   </style>
-  
 </head>
 <body>
-  <div id="controls">
-    
-    <button id="regenerate">Regenerate Random Scheme</button> <!-- Assuming this is your existing button -->
-    <input type="checkbox" id="myCheckbox" checked>
-    <label for="myCheckbox">open edge</label><br>
-  
-    <a>Seed: </a><input style="width:90px" type="text" id="seedInput" placeholder="Enter seed (leave blank for random)">
-    <button id="setSeed">Set Seed</button>
-
-    <div class="number-limit">
-      <label for="rows">Rows:</label>
-      <input type="number" style="position: absolute;  width: 30px;" id="rows" name="rows" min="1" max="9" value="7"> 
+  <div id="toolbar" class="panel">
+    <section>
+      <div class="sectionTitle">Mode</div>
+      <div class="buttonRow">
+        <button id="playModeButton" class="active" title="Shape the town by raising and lowering the ground">Play mode</button>
+        <button id="blockModeButton" title="Place, turn and mirror single blocks by hand">Block mode</button>
+      </div>
+      <div id="playStatus" class="hint modeDescription"></div>
+    </section>
+    <section>
+      <div class="sectionTitle">Map</div>
+      <div class="buttonRow threeButtons">
+        <button id="squareMapButton" class="active" title="A square grid of blocks">Square</button>
+        <button id="bentMapButton" title="A square grid whose lines bend gently">Bent</button>
+        <button id="hexagonalMapButton" title="An irregular grid of quads in a hexagon, as in Townscaper">Hex</button>
+      </div>
+      <div id="hexSizeControls" style="display: none;">
+        <div class="sliderLabel"><span>Hex size</span><span id="hexRingCountText"></span></div>
+        <input type="range" id="hexRingCountSlider" min="2" max="8" step="1" title="How many rings of hexagons the map has: more rings make a larger map (a new, empty-edged map is made when the slider is let go)">
+      </div>
+      <div id="bentGridControls" style="display: none;">
+        <div class="sliderLabel"><span>Bend</span><span id="bentGridAmplitudeText"></span></div>
+        <input type="range" id="bentGridAmplitude" min="0" max="6" step="0.1" title="How far the points of the grid are shifted">
+        <div class="sliderLabel"><span>Bend wavelength</span><span id="bentGridWavelengthText"></span></div>
+        <input type="range" id="bentGridWavelength" min="20" max="150" step="1" title="The distance over which the shift changes: longer is gentler">
+      </div>
+      <div class="buttonRow">
+        <button id="regenerate" title="A new random map">Generate</button>
+        <button id="flatField" title="An empty, flat field to build on">Flat field</button>
+      </div>
+      <div class="entropyRow" title="Shannon entropy of the blocks in the scene: higher means more kinds of block, more evenly used">
+        <span>Block entropy</span><span><b id="blockEntropyValue">0.00</b> bits</span>
+      </div>
+      <div class="entropyTrack"><div id="blockEntropyBar" class="entropyBar"></div></div>
+      <div class="entropyRow" title="Shannon entropy of the combinations of four blocks around every point where cells meet; the same four turned together count as one kind">
+        <span>Combination entropy</span><span><b id="junctionEntropyValue">0.00</b> bits</span>
+      </div>
+      <div class="entropyTrack"><div id="junctionEntropyBar" class="entropyBar"></div></div>
+      <div class="hint"><span id="entropyDetail"></span> &middot; <span id="schemeInfo"></span></div>
+    </section>
+    <section>
+      <div class="sectionTitle">Light</div>
+      <div class="sliderLabel"><span>Time of day</span><span id="timeOfDayText">12:00</span></div>
+      <input type="range" id="timeOfDay" min="0" max="24" step="0.05" value="12">
+      <label><input type="checkbox" id="pathTracingCheckbox"> Advanced light (path traced)</label>
+      <div id="pathTracingStatus" class="hint"></div>
+    </section>
+    <section>
+      <div class="sectionTitle">View</div>
+      <div class="sliderLabel"><span>Lens</span><span id="lensAngleText"></span></div>
+      <input type="range" id="lensAngle" min="8" max="60" step="1" title="The camera's angle of view: a small angle is a long lens, seen from further away, with less distortion">
+      <div class="buttonRow">
+        <button id="keepView" title="Write this map and this view to film/kept_views.json, for the film">Keep view</button>
+        <button id="undoKeptView" title="Take the last kept view off the list">Undo</button>
+      </div>
+      <div id="keptViewStatus" class="hint"></div>
+    </section>
+    <div class="buttonRow">
+      <button id="saveImage">Save image</button>
+      <button id="openSettings">Settings</button>
     </div>
-    <div class="number-limit">
-      <label for="cols">Columns:</label>
-      <input type="number" style="position: absolute;  width: 30px;" id="cols" name="cols" min="1" max="9" value="7"> 
-    </div>
-    <button id="apply">Apply Size</button>
-    <button id="saveImage">Save Image</button>
-
   </div>
-  
+
+  <div id="settings" class="panel">
+    <h3>Settings</h3>
+    <label><input type="checkbox" id="openEdgeCheckbox" checked> open edge</label>
+    <label><input type="checkbox" id="treesCheckbox" checked> trees</label>
+    <label><input type="checkbox" class="ruleCheckbox" data-rule-option="useLandscapeBlocks"> water</label>
+    <label><input type="checkbox" id="favorPavilionCheckbox"> favor the two-storey pavilion</label>
+    <div class="sizeRow">
+      <span>Rows</span><input type="number" id="rows" min="2" max="12" value="11">
+      <span>Columns</span><input type="number" id="cols" min="2" max="12" value="11">
+    </div>
+    <div class="seedRow">
+      <span>Seed</span><input type="text" id="seedInput" placeholder="empty for random">
+    </div>
+    <div class="buttonRow">
+      <button id="generateFromSettings">Generate</button>
+      <button id="closeSettings">Close</button>
+    </div>
+    <div class="hint" style="margin-top: 8px;">Applies to the next map.</div>
+  </div>
+
+  <div id="editor" class="panel">
+    <div class="toolRow">
+      <button id="selectTool" title="Select (Esc)">Select <kbd>Esc</kbd></button>
+      <button id="eraseTool" title="Erase (E)">Erase <kbd>E</kbd></button>
+      <button id="rotateBlock" title="Rotate (R)">Rotate <kbd>R</kbd></button>
+      <button id="mirrorBlock" title="Mirror (M)">Mirror <kbd>M</kbd></button>
+      <button id="clearAllBlocks" title="Remove every block">Clear</button>
+    </div>
+    <div id="blockPalette"></div>
+    <div class="editorStatus hint" id="brushStatus"></div>
+    <div class="editorStatus hint" id="selectionStatus"></div>
+    <div class="editorStatus hint" id="conflictStatus"></div>
+  </div>
 
   <script type="module" src="/main.js"></script>
 </body>

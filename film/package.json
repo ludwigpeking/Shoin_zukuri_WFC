@@ -1,0 +1,12 @@
+{
+  "name": "shoin-zukuri-wfc-film",
+  "private": true,
+  "description": "Renders the documentary film of the shoin-zukuri wave function collapse project",
+  "scripts": {
+    "footage": "node capture_footage.js",
+    "film": "node make_film.js"
+  },
+  "dependencies": {
+    "@napi-rs/canvas": "^0.1.60"
+  }
+}

@@ -1,1 +1,16 @@
 .vercel
+
+# large media of the film: footage, cuts, recordings, fonts (kept on disk, not in the repository)
+film/footage/
+film/footage_en/
+film/footage_raw/
+film/preview/
+film/releases/
+film/older_cuts/
+film/variants_pick/
+film/photos/
+film/fonts/
+film/voice*/
+film/node_modules/
+film/*.mp4
+*.exr

@@ -1,0 +1,294 @@
+1
+00:00:00,900 --> 00:00:06,624
+今天继续介绍我用波函数坍缩算法，也就是 WFC，在建筑学方面的一些试验。
+Today I continue with my experiments in architecture with the wave function collapse algorithm, WFC.
+
+2
+00:00:07,124 --> 00:00:10,062
+也涉及到一点我个人学习图形技术的故事。
+It is also a little of my own story of learning graphics programming.
+
+3
+00:00:10,562 --> 00:00:17,800
+我必须补充，是我一位朋友——网名 P小二 的 AI 行业专家，也是著名创业者和 UP 主
+I should add that it was a friend of mine, known online as P小二, an AI expert, well-known founder and video creator,
+
+4
+00:00:17,800 --> 00:00:21,419
+在我刚刚上手自学的时候，提示我关注这一算法。
+who pointed me to this algorithm when I had just begun teaching myself.
+
+5
+00:00:23,919 --> 00:00:29,033
+WFC 算法存在内在局限，不适合解决层次非常丰富的问题。
+WFC has inherent limits: it does not suit problems with many layers of hierarchy.
+
+6
+00:00:29,533 --> 00:00:33,907
+但是它适合构建建筑学构造层次的一些基本逻辑。
+But it does suit building some of the basic logic at the tectonic level of architecture.
+
+7
+00:00:34,407 --> 00:00:38,129
+我们一旦学会了它，自然要榨取其中的价值。
+Once we have learned it, we naturally want to squeeze the value out of it
+
+8
+00:00:38,129 --> 00:00:42,224
+并且从我们本身背景行业出发，吸取其中的启发。
+and, starting from our own profession, draw inspiration from it.
+
+9
+00:00:42,724 --> 00:00:49,711
+2022 年，在户型生成算法仅仅大致跑通的情况下，我寻找到了下一个实验对象——古建筑。
+In 2022, with my floor plan generator only roughly working, I found the next subject to experiment on: historical architecture.
+
+10
+00:00:50,211 --> 00:00:55,142
+古建筑的本质也是层次丰富的，不过它的构造，经常是套路化的。
+Historical architecture is also rich in hierarchy by nature, but its construction often follows set routines.
+
+11
+00:00:55,642 --> 00:00:59,298
+这些套路，有时候在表面上定义它自身的形式。
+Those routines sometimes define its very form, on the surface.
+
+12
+00:01:01,998 --> 00:01:07,797
+偏巧我当时从 Bruno Simon 的网课上接触了一些三维网页技术，使我有动力开工进行这个实验。
+As it happened, I had just picked up some 3D web technology from Bruno Simon's online course, which gave me the drive to start this experiment.
+
+13
+00:01:08,297 --> 00:01:12,900
+算法知识来自于 Oskar Stålberg 和 Daniel Shiffman 教授的讲座。
+The knowledge of the algorithm came from the talks of Oskar Stålberg and Professor Daniel Shiffman.
+
+14
+00:01:13,400 --> 00:01:19,330
+特别是 Shiffman 教授的讲座，给出了简明、而且我相对擅长的 JavaScript 代码。
+Professor Shiffman's lecture in particular gave concise code in JavaScript, a language I am fairly at home in.
+
+15
+00:01:19,830 --> 00:01:22,247
+这些就是这个项目的起点。
+These are where this project started.
+
+16
+00:01:24,647 --> 00:01:28,424
+WFC 最为人知的用途，是生成游戏关卡。
+WFC is best known for generating game levels.
+
+17
+00:01:28,924 --> 00:01:33,148
+从建筑师的角度，我们看重的，是它作为构造的语法。
+From an architect's point of view, what we value is its use as a tectonic grammar.
+
+18
+00:01:33,648 --> 00:01:38,598
+适合自下而上构造化的产生秩序，在构件与构件的交接处。
+It suits producing order from the bottom up, tectonically, where one component meets another.
+
+19
+00:01:39,098 --> 00:01:43,741
+屋脊怎样相接，檐口怎样转角，天沟能不能出现。
+How ridges meet, how eaves turn a corner, whether a gutter may appear.
+
+20
+00:01:44,241 --> 00:01:50,449
+这些交接的规矩，正是传统木构建筑最精炼的知识和一些自然的法则。
+These rules of joining are the most distilled knowledge of traditional timber architecture, and some laws of nature.
+
+21
+00:01:50,949 --> 00:01:56,687
+在它形成一个构造基础之上，要施加什么更宏观的秩序，是另外一个层次的问题。
+What larger order to impose on top of this tectonic base is a question on another level.
+
+22
+00:01:57,187 --> 00:02:02,047
+我们这个实验是暂时排除更上层问题的。那是下一个实验的问题。
+This experiment sets those higher questions aside for now. They belong to the next experiment.
+
+23
+00:02:04,547 --> 00:02:10,839
+积木的种类是非常有限的，阴角、阳角、边缘、中腹，几种不同的形式而已。
+The kinds of block are very few: inside corners, outside corners, edges and middles, only a handful of forms.
+
+24
+00:02:11,339 --> 00:02:16,523
+两个块相邻，只要相对的两条边的剖面吻合，就能拼在一起。
+Two neighbouring blocks fit together as long as the sections of their facing edges agree.
+
+25
+00:02:17,023 --> 00:02:23,954
+代码实际上简单得惊人，只是把每块积木的边缘编码，每个边缘用 3 个字符表示。
+The code is surprisingly simple: it just encodes the edges of every block, three characters to an edge.
+
+26
+00:02:24,454 --> 00:02:29,357
+这些字符是对这些边缘形状的抽象，主要表示高度轮廓。
+The characters abstract the shape of an edge, mainly its profile of heights.
+
+27
+00:02:29,857 --> 00:02:32,808
+0 是地面，-1 是水底；
+Zero is the ground and minus one the water bottom;
+
+28
+00:02:32,808 --> 00:02:42,795
+1 是檐口，2 是进深较浅部分的矮脊，3 是进深较大的房屋的高的屋脊，4，是二层的檐口。
+one is the eave, two the low ridge of the shallower part, three the high ridge of the deeper building, and four the eave of the upper storey.
+
+29
+00:02:43,295 --> 00:02:49,479
+用一些条件语句来判断两块积木的边能否拼合。拼合不了的地方会给出报警。
+A few conditional statements decide whether two edges can join. Where they cannot, a warning is shown.
+
+30
+00:02:49,979 --> 00:02:52,824
+有个别的情况需要人为写一些代码来排除。
+A few cases have to be ruled out with code written by hand.
+
+31
+00:02:53,324 --> 00:02:57,223
+比如，两片下坡的屋面不能对撞，形成积水的天沟；
+For example, two roofs sloping down may not meet in a gutter that holds water,
+
+32
+00:02:57,223 --> 00:02:59,765
+两个凹角不能相对，形成一个坑。
+and two valley corners may not face each other and form a pit.
+
+33
+00:03:02,465 --> 00:03:09,910
+这些规则，最早是在笔记本上一格一格画出来的。每个块编号，每条边写上高度。
+These rules were first drawn cell by cell in a notebook. Every block numbered, every edge labelled with its heights.
+
+34
+00:03:10,410 --> 00:03:14,612
+后来整理成 32 个块，之后我又简化到 24 个块。
+Later they were sorted into 32 blocks, which I then reduced to 24.
+
+35
+00:03:15,112 --> 00:03:19,254
+其中有一些是和地面、水面、小桥之类景观元素有关的。
+Some of them are landscape elements: ground, water, a small bridge.
+
+36
+00:03:21,954 --> 00:03:24,403
+建模在 Blender 里进行。
+The modelling is done in Blender.
+
+37
+00:03:24,403 --> 00:03:28,996
+用的仍然是我 2023 年手动建的。当时花了大概一整个周末。
+The models are still the ones I built by hand in 2023, which took about a whole weekend.
+
+38
+00:03:29,496 --> 00:03:33,081
+即便现在，这种模型，也很难交给 AI 去建。
+Even now such models are hard to hand over to AI,
+
+39
+00:03:33,081 --> 00:03:37,645
+因为 AI 暂时对这种多维度的目标，把握能力还比较有限。
+whose grasp of a target with this many dimensions is still limited.
+
+40
+00:03:38,145 --> 00:03:40,445
+不知道再过一年会是什么情况。
+Who knows how that will look in another year.
+
+41
+00:03:43,345 --> 00:03:47,293
+生成的时候，每一格先处在所有可能的叠加之中。
+When generating, every cell starts in a superposition of all possibilities.
+
+42
+00:03:47,793 --> 00:03:53,531
+可能性最少的那一格先坍缩，它的选择，又排除了邻居的一部分可能。
+The cell with the fewest possibilities collapses first, and its choice rules out some of its neighbours' options.
+
+43
+00:03:54,031 --> 00:03:59,252
+一格接一格，建筑、檐廊、池塘，从局部的规则里长出来。
+Cell by cell, buildings, verandas and ponds grow out of local rules.
+
+44
+00:03:59,752 --> 00:04:04,654
+这种生成的结果是相当散漫的。因为这里面没有给出任何的评价方式。
+The results generated this way are rather loose, because nothing in here evaluates them.
+
+45
+00:04:05,154 --> 00:04:08,995
+散漫的结果，看起来就不像相对整齐的宋明官式古建，
+Loose as they are, they look less like the fairly regular official architecture of the Song and Ming dynasties,
+
+46
+00:04:08,995 --> 00:04:14,917
+而更像日本室町时代的武家住宅格式，也称书院造（Shoin-zukuri）。
+and more like the warrior residences of Japan's Muromachi period, the style called shoin-zukuri.
+
+47
+00:04:18,417 --> 00:04:24,169
+由于 vibe coding 的成熟，我最近增加了一些功能，可以手动在里面增减建筑的体量。
+Now that vibe coding has matured, I recently added features to add and remove building volumes by hand.
+
+48
+00:04:24,669 --> 00:04:26,934
+这种玩法和 Townscaper 大体一致。
+This way of playing is much the same as Townscaper.
+
+49
+00:04:30,234 --> 00:04:33,566
+这个系统，不只能在横平竖直的网格里进行，
+The system does not only work on a straight, square grid;
+
+50
+00:04:33,566 --> 00:04:37,065
+也能放进任何，或固定或自由的四边形网格里。
+it can go into any grid of quads, fixed or free.
+
+51
+00:04:37,565 --> 00:04:41,063
+比如 Stålberg 在他的游戏设计中使用的网格。
+For example the grid Stålberg uses in his game design.
+
+52
+00:04:41,563 --> 00:04:46,178
+在一个轻微扭曲的网格里，生成结果显示出貌似的有机性。
+On a gently bent grid, the results show a seemingly organic quality.
+
+53
+00:04:46,678 --> 00:04:50,986
+而在扭动剧烈的网格里，则显得相当现代和高技派。
+On a strongly twisted grid, they look quite modern, even high-tech.
+
+54
+00:04:51,486 --> 00:04:53,658
+我从中甚至得到了一些启发，
+I even took something from this:
+
+55
+00:04:53,658 --> 00:04:58,671
+其实古建，如果放弃标准化的尺寸，其实造型上可以相当令人意外。
+historical architecture, once it gives up standardized dimensions, can be quite surprising in form.
+
+56
+00:05:02,171 --> 00:05:04,773
+换一套积木，就可以产生另一套风格。
+Swap in another set of blocks, and you get another style.
+
+57
+00:05:05,273 --> 00:05:09,115
+多套积木的拼合，就可以形成类型学混合。
+Join several sets of blocks, and you get a mixture of typologies.
+
+58
+00:05:09,615 --> 00:05:14,629
+用另一套力学来支配这种混合的方式，就会产生更高层级的秩序。
+Let another set of forces govern how they mix, and an order of a higher level appears.
+
+59
+00:05:15,129 --> 00:05:17,017
+这就是这套方法的探索方向。
+That is the direction this method is exploring.
