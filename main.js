@@ -6,10 +6,11 @@ import PineTree from './Pine';
 import { buildSoftShoreGround } from './softShore';
 import { terrainRelief, buildFlatGroundArrays, reliefAmplitude, groundColourNoise } from './terrain';
 import { WebGLPathTracer } from 'three-gpu-pathtracer';
-import { ParallelMeshBVHWorker } from 'three-mesh-bvh/src/workers/ParallelMeshBVHWorker';
+import { ParallelMeshBVHWorker } from 'three-mesh-bvh/worker';
 import { richVariantSeeds } from './richVariants';
 import { generateHexQuadMap } from './quadMap';
 import { generateBentGridQuadMap } from './bentGrid';
+import { makeRoofTileTextures, makeGroundTexture, roofTileUv, groundUv } from './bakedTextures';
 
 let buildingBlocks = [];
 let cols = 11;
@@ -646,7 +647,7 @@ renderer.shadowMap.enabled = true;
 renderer.shadowMap.needsUpdate = true;
 renderer.toneMapping = THREE.ACESFilmicToneMapping; // keeps the sunlit surfaces from burning out
 renderer.toneMappingExposure = 1;
-renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+renderer.shadowMap.type = THREE.PCFShadowMap;
 
 
 
@@ -1351,14 +1352,24 @@ function addRoofTileAttributes(geometry) {
   geometry.setAttribute('roofTileWeight', new THREE.BufferAttribute(weights, 1));
   geometry.setAttribute('roofTileAcross', new THREE.BufferAttribute(acrossCoordinates, 1));
   geometry.setAttribute('roofTileSlope', new THREE.BufferAttribute(slopeDirections, 3));
+  // the baked tile textures (bakedTextures.js, for the path tracer) are laid by tile and course
+  const uvs = new Float32Array(pointCount * 2);
+  for (let point = 0; point < pointCount; point++) {
+    const uv = roofTileUv(acrossCoordinates[point], positions.getY(point), weights[point] > 0.5, roofTileWidth, roofCourseHeight);
+    uvs[point * 2] = uv[0];
+    uvs[point * 2 + 1] = uv[1];
+  }
+  geometry.setAttribute('uv', new THREE.BufferAttribute(uvs, 2));
   return geometry;
 }
 
+const roofTileMaterials = new Set(); // (they take the baked tile textures while the path tracer is on)
 function addRoofTiles(material) {
   if (material.userData.hasRoofTiles) {
     return;
   }
   material.userData.hasRoofTiles = true;
+  roofTileMaterials.add(material);
   material.onBeforeCompile = function (shader) {
     shader.vertexShader = shader.vertexShader
       .replace('#include <common>', `#include <common>
@@ -1872,6 +1883,14 @@ function prepareLushGround(modelScene) {
     }
     child.geometry.setAttribute('color', new THREE.BufferAttribute(colours, 4));
     child.geometry.setAttribute('wetness', new THREE.BufferAttribute(new Float32Array(pointCount), 1));
+    // the baked grass texture (bakedTextures.js, for the path tracer) repeats with the blocks
+    const uvs = new Float32Array(pointCount * 2);
+    for (let point = 0; point < pointCount; point++) {
+      const uv = groundUv(positions.getX(point), positions.getZ(point));
+      uvs[point * 2] = uv[0];
+      uvs[point * 2 + 1] = uv[1];
+    }
+    child.geometry.setAttribute('uv', new THREE.BufferAttribute(uvs, 2));
     child.material = lushGroundMaterial;
   });
 }
@@ -3986,6 +4005,7 @@ function showMapTypeInInterface() {
   document.getElementById('bentMapButton').classList.toggle('active', mapIsHexagonal && quadMapKind === 'bent');
   document.getElementById('bentGridControls').style.display = mapIsHexagonal && quadMapKind === 'bent' ? '' : 'none';
   document.getElementById('hexSizeControls').style.display = mapIsHexagonal && quadMapKind === 'hexagonal' ? '' : 'none';
+  document.getElementById('gridSizeControls').style.display = mapIsHexagonal && quadMapKind === 'hexagonal' ? 'none' : '';
   showHexRingCount();
 }
 
@@ -4014,6 +4034,77 @@ document.getElementById('hexagonalMapButton').addEventListener('click', function
     startQuadMapOfKind('hexagonal', Date.now() % 1000000);
   }
 });
+// The pictures on the map buttons: the grid each kind makes, drawn small by the generator that
+// makes the map itself (a square grid, the bent grid, the hexagon of quads), so that the buttons
+// show what they give rather than a word
+function drawMapPicture(canvas, points, cells, fillShare) {
+  const brush = canvas.getContext('2d');
+  let minX = Infinity;
+  let maxX = -Infinity;
+  let minZ = Infinity;
+  let maxZ = -Infinity;
+  points.forEach(function (point) {
+    minX = Math.min(minX, point.x);
+    maxX = Math.max(maxX, point.x);
+    minZ = Math.min(minZ, point.z);
+    maxZ = Math.max(maxZ, point.z);
+  });
+  const margin = 8;
+  const scale = (fillShare || 1) * Math.min((canvas.width - 2 * margin) / (maxX - minX), (canvas.height - 2 * margin) / (maxZ - minZ));
+  const offsetX = (canvas.width - (maxX - minX) * scale) / 2;
+  const offsetZ = (canvas.height - (maxZ - minZ) * scale) / 2;
+  brush.clearRect(0, 0, canvas.width, canvas.height);
+  brush.fillStyle = '#f4f1ea';
+  brush.strokeStyle = '#3a3f47';
+  brush.lineWidth = 2.6; // (the canvas is drawn at twice the size it is shown at)
+  brush.lineJoin = 'round';
+  function traceCell(cell) {
+    brush.beginPath();
+    cell.corners.forEach(function (cornerIndex, index) {
+      const point = points[cornerIndex];
+      const x = offsetX + (point.x - minX) * scale;
+      const y = offsetZ + (point.z - minZ) * scale;
+      if (index === 0) {
+        brush.moveTo(x, y);
+      } else {
+        brush.lineTo(x, y);
+      }
+    });
+    brush.closePath();
+  }
+  // (all the fills first, then all the outlines: a fill drawn later would cover half of a neighbour's line)
+  cells.forEach(function (cell) {
+    traceCell(cell);
+    brush.fill();
+  });
+  cells.forEach(function (cell) {
+    traceCell(cell);
+    brush.stroke();
+  });
+}
+function drawMapPictures() {
+  const pictureColumns = 7;
+  const pictureRows = 5;
+  const squarePoints = [];
+  const squareCells = [];
+  for (let row = 0; row <= pictureRows; row++) {
+    for (let column = 0; column <= pictureColumns; column++) {
+      squarePoints.push({ x: column * cellSize, z: row * cellSize });
+    }
+  }
+  for (let row = 0; row < pictureRows; row++) {
+    for (let column = 0; column < pictureColumns; column++) {
+      const corner = row * (pictureColumns + 1) + column;
+      squareCells.push({ corners: [corner, corner + 1, corner + pictureColumns + 2, corner + pictureColumns + 1] });
+    }
+  }
+  drawMapPicture(document.querySelector('#squareMapButton .mapPicture'), squarePoints, squareCells);
+  const bentPictureMap = generateBentGridQuadMap(pictureColumns, pictureRows, cellSize, bentGridShift.amplitudeMetres, bentGridShift.wavelengthMetres * 0.8, 3);
+  drawMapPicture(document.querySelector('#bentMapButton .mapPicture'), bentPictureMap.points, bentPictureMap.cells, 1.05);
+  const hexPictureMap = generateHexQuadMap(2, cellSize, 7);
+  drawMapPicture(document.querySelector('#hexagonalMapButton .mapPicture'), hexPictureMap.points, hexPictureMap.cells, 1.1);
+}
+drawMapPictures();
 document.getElementById('bentMapButton').addEventListener('click', function () {
   if (!mapIsHexagonal || quadMapKind !== 'bent') {
     startQuadMapOfKind('bent', Date.now() % 1000000);
@@ -4155,8 +4246,40 @@ function renderPathTracedSample() {
     Math.floor(pathTracer.samples) + ' / ' + maximumPathTracedSampleCount + ' samples';
 }
 
+// The patterns the normal view draws in its shaders, baked (bakedTextures.js): the materials take
+// them as maps while the path tracer is on, which reads maps and not shaders, and give them back
+// for the normal view, which draws the patterns itself and would draw them twice over the maps
+let bakedRoofTextures = null;
+let bakedGroundTexture = null;
+function setBakedMapsForTracing(isOn) {
+  if (isOn && bakedRoofTextures === null) {
+    bakedRoofTextures = makeRoofTileTextures();
+    bakedGroundTexture = makeGroundTexture();
+  }
+  roofTileMaterials.forEach(function (material) {
+    if (isOn) {
+      material.userData.roughnessBeforeTracing = material.roughness;
+      material.map = bakedRoofTextures.map;
+      material.roughnessMap = bakedRoofTextures.roughnessMap;
+      material.roughness = 1; // (the roughness map carries it)
+    } else {
+      material.map = null;
+      material.roughnessMap = null;
+      if (material.userData.roughnessBeforeTracing !== undefined) {
+        material.roughness = material.userData.roughnessBeforeTracing;
+      }
+    }
+    material.needsUpdate = true;
+  });
+  if (lushGroundMaterial) {
+    lushGroundMaterial.map = isOn ? bakedGroundTexture : null;
+    lushGroundMaterial.needsUpdate = true;
+  }
+}
+
 document.getElementById('pathTracingCheckbox').addEventListener('change', function () {
   pathTracingIsOn = this.checked;
+  setBakedMapsForTracing(pathTracingIsOn);
   if (pathTracingIsOn && !pathTracer) {
     // The path tracer reads these two from every scene, also from one it makes itself, and
     // three 0.160 does not have them yet (they came in 0.162). Unrotated is what is wanted.
@@ -4281,7 +4404,7 @@ const moonAzimuthDegrees = middaySunAzimuthDegrees + 180;
 const moonColor = new THREE.Color(0x9fb4ff);
 const lowSunColor = new THREE.Color(0xffa860);
 const highSunColor = new THREE.Color(0xffffee);
-const nightPaperDoorGlow = 2.5;      // times the model's glow, at night; none by day
+const nightPaperDoorGlow = 0.5;      // times the model's glow, at night; none by day (2.5 until 2026-10-13: the author wants a fifth of it)
 const nightExposureIncrease = 0.6;
 
 function formatHour(hour) {
@@ -4416,8 +4539,11 @@ function describeKeptView() {
   };
 }
 
+function showSchemeStatus(text) {
+  document.getElementById('schemeStatus').textContent = text;
+}
 function showKeptViewCount(reply) {
-  document.getElementById('keptViewStatus').textContent = reply.count + ' kept' + (reply.count > 0 ? ' (the last: ' + reply.lastSchemeInfo + ')' : '');
+  showSchemeStatus(reply.count + ' kept for the film' + (reply.count > 0 ? ' (the last: ' + reply.lastSchemeInfo + ')' : ''));
 }
 function askKeptViewServer(body) {
   return fetch('/film/kept-views', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
@@ -4429,19 +4555,46 @@ function askKeptViewServer(body) {
     })
     .then(showKeptViewCount)
     .catch(function (error) {
-      document.getElementById('keptViewStatus').textContent = 'Not kept: the development server did not answer (' + error.message + ').';
+      showSchemeStatus('Not kept: the development server did not answer (' + error.message + ').');
     });
 }
 function sendKeptView(pictureDataUrl) {
   askKeptViewServer({ action: 'keep', view: describeKeptView(), picture: pictureDataUrl });
 }
-document.getElementById('keepView').addEventListener('click', function () {
-  keptViewIsRequested = true; // sent after the next frame, with its picture
+// A scheme saved as a file the browser hands over, and loaded from one: the same description
+// the film's kept views use, so that either brings the map, its blocks and trees, the light and
+// the view back exactly
+document.getElementById('saveSchemeButton').addEventListener('click', function () {
+  const scheme = describeKeptView();
+  const name = 'scheme_' + scheme.mapKind + '_' + scheme.seed;
+  const link = document.createElement('a');
+  link.href = URL.createObjectURL(new Blob([JSON.stringify(scheme)], { type: 'application/json' }));
+  link.download = name + '.json';
+  link.click();
+  URL.revokeObjectURL(link.href);
+  showSchemeStatus('Saved as ' + name + '.json, in the downloads.');
 });
-document.getElementById('undoKeptView').addEventListener('click', function () {
-  askKeptViewServer({ action: 'undo' });
+document.getElementById('loadSchemeButton').addEventListener('click', function () {
+  document.getElementById('loadSchemeInput').click();
 });
-askKeptViewServer({ action: 'count' });
+document.getElementById('loadSchemeInput').addEventListener('change', function () {
+  const file = this.files[0];
+  if (!file) {
+    return;
+  }
+  const reader = new FileReader();
+  reader.onload = function () {
+    try {
+      const scheme = JSON.parse(reader.result);
+      restoreKeptView(scheme);
+      showSchemeStatus('Loaded ' + file.name + ': ' + (scheme.schemeInfo || scheme.mapKind + ' map, seed ' + scheme.seed) + '.');
+    } catch (error) {
+      showSchemeStatus('Not a scheme: ' + error.message);
+    }
+  };
+  reader.readAsText(file);
+  this.value = '';
+});
 
 function tileFromDescription(description) {
   return description ? createOrientedTile(description[0], description[1], description[2] === 1) : null;

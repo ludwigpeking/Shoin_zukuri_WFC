@@ -6,88 +6,162 @@
   <title>Shoin-zukuri</title>
 
   <style>
+    /* Paper and ink. Hairlines, few words, one quiet green; nothing shouts but the one main button. */
     body {
       margin: 0;
-      font-family: sans-serif;
-      font-size: 13px;
+      overflow: hidden;
+      font-family: "Segoe UI", "Helvetica Neue", Helvetica, Arial, sans-serif;
+      font-size: 12.5px;
+      color: #2b2a27;
     }
     canvas {
       display: block;
     }
     button {
-      padding: 6px 10px;
-      border: 1px solid #b8b8b8;
-      border-radius: 4px;
-      background: #ffffff;
+      padding: 7px 10px;
+      border: 1px solid #d8d2c6;
+      border-radius: 2px;
+      background: rgba(255, 255, 255, 0.55);
+      color: #2b2a27;
       cursor: pointer;
-      font-size: 13px;
+      font: inherit;
+      transition: background 0.12s, border-color 0.12s;
     }
     button:hover {
-      background: #eef4f8;
+      background: #ffffff;
+      border-color: #a9a194;
     }
     button:disabled {
-      opacity: 0.45;
+      opacity: 0.4;
       cursor: not-allowed;
     }
     button.active {
-      background: #2f3e48;
-      border-color: #2f3e48;
-      color: #ffffff;
+      background: #3b3a36;
+      border-color: #3b3a36;
+      color: #f5f2ea;
+    }
+    .mainButton {
+      grid-column: 1 / -1;
+      padding: 11px 10px;
+      border-color: #3b3a36;
+      background: #3b3a36;
+      color: #f5f2ea;
+      font-size: 13px;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+    }
+    .mainButton:hover {
+      background: #1f1e1b;
+      border-color: #1f1e1b;
+    }
+    .quietButton {
+      grid-column: 1 / -1;
+      padding: 3px;
+      border: none;
+      background: transparent;
+      color: #8a8275;
+      font-size: 11.5px;
+      text-align: center;
+    }
+    .quietButton:hover {
+      background: transparent;
+      color: #2b2a27;
     }
     .panel {
       position: absolute;
-      background: rgba(245, 245, 242, 0.94);
-      border-radius: 6px;
-      box-shadow: 0 1px 6px rgba(0, 0, 0, 0.25);
-      padding: 10px;
+      background: rgba(248, 246, 241, 0.95);
+      border: 1px solid rgba(90, 80, 60, 0.12);
+      border-radius: 3px;
+      box-shadow: 0 4px 18px rgba(40, 35, 25, 0.1);
+      padding: 14px 14px 10px;
     }
     .hint {
-      color: #555555;
+      color: #8a8275;
       font-size: 11px;
-      line-height: 1.4;
+      line-height: 1.5;
+    }
+    input[type="range"] {
+      accent-color: #3b3a36;
+      margin: 2px 0 4px;
+    }
+    input[type="checkbox"] {
+      accent-color: #3b3a36;
+      width: 15px;
+      height: 15px;
+      margin: 0 7px 0 0;
+      vertical-align: -3px;
+    }
+    .checkLabel {
+      display: block;
+      padding: 3px 0;
+      color: #2b2a27;
+    }
+    .statusLine {
+      min-height: 1.5em;
+      color: #5e5850;
+      font-size: 12px;
+      line-height: 1.5;
+    }
+    input[type="number"], input[type="text"] {
+      padding: 4px 6px;
+      border: 1px solid #d8d2c6;
+      border-radius: 2px;
+      background: rgba(255, 255, 255, 0.55);
+      color: #2b2a27;
+      font: inherit;
+      box-sizing: border-box;
     }
 
     #toolbar {
-      top: 10px;
-      left: 10px;
-      width: 230px;
+      top: 12px;
+      left: 12px;
+      width: 236px;
+      max-height: calc(100vh - 24px);
+      overflow-y: auto;
+      box-sizing: border-box;
       display: flex;
       flex-direction: column;
-      gap: 12px;
+      gap: 14px;
     }
     #toolbar section {
       display: flex;
       flex-direction: column;
-      gap: 6px;
-      padding-bottom: 10px;
-      border-bottom: 1px solid #dddddd;
+      gap: 7px;
+      padding-bottom: 14px;
+      border-bottom: 1px solid #e3ddd2;
     }
     .sectionTitle {
-      font-size: 11px;
-      font-weight: bold;
-      letter-spacing: 0.06em;
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0.2em;
       text-transform: uppercase;
-      color: #6b7780;
+      color: #9a9184;
     }
+    /* the entropies: there, quiet, for those who look */
     .entropyRow {
       display: flex;
       justify-content: space-between;
+      font-size: 11px;
+      color: #9a9184;
+    }
+    .entropyRow b {
+      font-weight: normal;
+      color: #7d766b;
     }
     .entropyTrack {
-      height: 6px;
-      border-radius: 3px;
-      background: #dfe3e6;
+      height: 2px;
+      background: #e6e1d7;
       overflow: hidden;
     }
     .entropyBar {
       height: 100%;
       width: 0;
-      background: #6f8f3c;
+      background: #a3ad92;
     }
     .modeDescription {
-      background: #ffffff;
-      border-radius: 4px;
-      padding: 6px;
+      padding: 6px 9px;
+      border-left: 2px solid #d8d2c6;
+      background: rgba(255, 255, 255, 0.45);
     }
     .buttonRow {
       display: grid;
@@ -97,12 +171,35 @@
     #timeOfDay, #lensAngle, #bentGridAmplitude, #bentGridWavelength, #hexRingCountSlider {
       width: 100%;
     }
+    /* the map buttons show their grid: a picture of the map each makes, drawn by its own generator */
+    .mapButton {
+      padding: 5px 5px 6px;
+      text-align: center;
+    }
+    .mapButton .mapPicture {
+      display: block;
+      width: 100%;
+      height: auto;
+      margin-bottom: 4px;
+      border-radius: 2px;
+    }
     .buttonRow.threeButtons {
       grid-template-columns: 1fr 1fr 1fr;
     }
     .sliderLabel {
       display: flex;
       justify-content: space-between;
+      color: #5e5850;
+    }
+    .sizeRow {
+      display: grid;
+      grid-template-columns: auto 1fr auto 1fr;
+      gap: 6px 8px;
+      align-items: center;
+      color: #5e5850;
+    }
+    .sizeRow input {
+      width: 100%;
     }
 
     #settings {
@@ -118,7 +215,9 @@
     }
     #settings h3 {
       margin: 0 0 8px 0;
-      font-size: 15px;
+      font-size: 14px;
+      font-weight: 600;
+      letter-spacing: 0.08em;
     }
     #settings label {
       display: block;
@@ -160,19 +259,18 @@
       display: inline-block;
       min-width: 12px;
       padding: 0 4px;
-      border: 1px solid #b0b0b0;
-      border-bottom-width: 2px;
-      border-radius: 3px;
-      background: #f4f4f4;
-      color: #333333;
-      font-family: sans-serif;
+      border: 1px solid #cfc9bd;
+      border-radius: 2px;
+      background: rgba(255, 255, 255, 0.6);
+      color: #5e5850;
+      font-family: inherit;
       font-size: 10px;
       line-height: 15px;
     }
     button.active kbd {
-      background: #4a5a66;
-      border-color: #6c7c88;
-      color: #ffffff;
+      background: transparent;
+      border-color: rgba(245, 242, 234, 0.5);
+      color: #f5f2ea;
     }
     #blockPalette {
       display: grid;
@@ -220,9 +318,13 @@
     <section>
       <div class="sectionTitle">Map</div>
       <div class="buttonRow threeButtons">
-        <button id="squareMapButton" class="active" title="A square grid of blocks">Square</button>
-        <button id="bentMapButton" title="A square grid whose lines bend gently">Bent</button>
-        <button id="hexagonalMapButton" title="An irregular grid of quads in a hexagon, as in Townscaper">Hex</button>
+        <button id="squareMapButton" class="active mapButton" title="A square grid of blocks"><canvas class="mapPicture" width="180" height="120"></canvas>Square</button>
+        <button id="bentMapButton" class="mapButton" title="A square grid whose lines bend gently"><canvas class="mapPicture" width="180" height="120"></canvas>Bent</button>
+        <button id="hexagonalMapButton" class="mapButton" title="An irregular grid of quads in a hexagon, as in Townscaper"><canvas class="mapPicture" width="180" height="120"></canvas>Hex</button>
+      </div>
+      <div id="gridSizeControls" class="sizeRow">
+        <span>Columns</span><input type="number" id="cols" min="2" max="12" value="11" title="Columns of the grid (applies to the next map)">
+        <span>Rows</span><input type="number" id="rows" min="2" max="12" value="11" title="Rows of the grid (applies to the next map)">
       </div>
       <div id="hexSizeControls" style="display: none;">
         <div class="sliderLabel"><span>Hex size</span><span id="hexRingCountText"></span></div>
@@ -235,8 +337,8 @@
         <input type="range" id="bentGridWavelength" min="20" max="150" step="1" title="The distance over which the shift changes: longer is gentler">
       </div>
       <div class="buttonRow">
-        <button id="regenerate" title="A new random map">Generate</button>
-        <button id="flatField" title="An empty, flat field to build on">Flat field</button>
+        <button id="regenerate" class="mainButton" title="A new random map of this kind and size">Generate</button>
+        <button id="flatField" class="quietButton" title="An empty, flat field to build on">or an empty, flat field</button>
       </div>
       <div class="entropyRow" title="Shannon entropy of the blocks in the scene: higher means more kinds of block, more evenly used">
         <span>Block entropy</span><span><b id="blockEntropyValue">0.00</b> bits</span>
@@ -252,18 +354,22 @@
       <div class="sectionTitle">Light</div>
       <div class="sliderLabel"><span>Time of day</span><span id="timeOfDayText">12:00</span></div>
       <input type="range" id="timeOfDay" min="0" max="24" step="0.05" value="12">
-      <label><input type="checkbox" id="pathTracingCheckbox"> Advanced light (path traced)</label>
-      <div id="pathTracingStatus" class="hint"></div>
+      <label class="checkLabel"><input type="checkbox" id="pathTracingCheckbox"> Advanced light (path traced)</label>
+      <div id="pathTracingStatus" class="statusLine"></div>
     </section>
     <section>
       <div class="sectionTitle">View</div>
       <div class="sliderLabel"><span>Lens</span><span id="lensAngleText"></span></div>
       <input type="range" id="lensAngle" min="8" max="60" step="1" title="The camera's angle of view: a small angle is a long lens, seen from further away, with less distortion">
+    </section>
+    <section>
+      <div class="sectionTitle">Scheme</div>
       <div class="buttonRow">
-        <button id="keepView" title="Write this map and this view to film/kept_views.json, for the film">Keep view</button>
-        <button id="undoKeptView" title="Take the last kept view off the list">Undo</button>
+        <button id="saveSchemeButton" title="Save this map, its blocks and trees, the light and the view as a file">Save</button>
+        <button id="loadSchemeButton" title="Load a saved scheme from a file">Load</button>
       </div>
-      <div id="keptViewStatus" class="hint"></div>
+      <input id="loadSchemeInput" type="file" accept=".json,application/json" style="display: none;">
+      <div id="schemeStatus" class="hint">A scheme is a .json file: the map with everything that stands on it, the light and the view.</div>
     </section>
     <div class="buttonRow">
       <button id="saveImage">Save image</button>
@@ -277,10 +383,6 @@
     <label><input type="checkbox" id="treesCheckbox" checked> trees</label>
     <label><input type="checkbox" class="ruleCheckbox" data-rule-option="useLandscapeBlocks"> water</label>
     <label><input type="checkbox" id="favorPavilionCheckbox"> favor the two-storey pavilion</label>
-    <div class="sizeRow">
-      <span>Rows</span><input type="number" id="rows" min="2" max="12" value="11">
-      <span>Columns</span><input type="number" id="cols" min="2" max="12" value="11">
-    </div>
     <div class="seedRow">
       <span>Seed</span><input type="text" id="seedInput" placeholder="empty for random">
     </div>

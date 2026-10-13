@@ -20,12 +20,12 @@
   },
   "homepage": "https://github.com/ludwigpeking/Shoin_zukuri_WFC#readme",
   "dependencies": {
-    "lil-gui": "^0.18.2",
-    "three": "^0.160.1",
-    "three-gpu-pathtracer": "^0.0.23",
-    "three-mesh-bvh": "^0.7.8"
+    "lil-gui": "^0.21.0",
+    "three": "^0.186.1",
+    "three-gpu-pathtracer": "^0.0.27",
+    "three-mesh-bvh": "^0.9.16"
   },
   "devDependencies": {
-    "vite": "^4.4.9"
+    "vite": "^7.3.7"
   }
 }
