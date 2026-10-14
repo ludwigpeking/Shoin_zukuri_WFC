@@ -756,13 +756,14 @@ const axesHelper = new THREE.AxesHelper(50);
 
 // Add environmental lighting
 const cubeTextureLoader = new THREE.CubeTextureLoader();
+cubeTextureLoader.setPath(import.meta.env.BASE_URL + 'cubeTexture/2/');
 const environmentMapTexture = cubeTextureLoader.load([
-  '/cubeTexture/2/px.png',
-  '/cubeTexture/2/nx.png',
-  '/cubeTexture/2/py.png',
-  '/cubeTexture/2/ny.png',
-  '/cubeTexture/2/pz.png',
-  '/cubeTexture/2/nz.png',
+  'px.png',
+  'nx.png',
+  'py.png',
+  'ny.png',
+  'pz.png',
+  'nz.png',
 ], function (loadedTexture) {
   scene.environment = createShadowLightTexture(loadedTexture);
   if (pathTracer) {
@@ -1987,7 +1988,7 @@ function loadBuildingBlocks() {
   
   // Load GLB file
   let loader = new GLTFLoader(manager);
-  loader.load('/20230812_refactor.glb', function (gltf){
+  loader.load(import.meta.env.BASE_URL + '20230812_refactor.glb', function (gltf){
     gltf.scene.children.forEach((child) => {
         child.visible = false;
         // Store building blocks for future reference
